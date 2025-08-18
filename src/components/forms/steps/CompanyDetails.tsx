@@ -6,80 +6,78 @@ interface CompanyDetailsProps {
   onChange: (field: string, value: string) => void;
 }
 
-const industries = [
-  { value: 'technology', label: 'Technology' },
-  { value: 'healthcare', label: 'Healthcare' },
-  { value: 'finance', label: 'Finance' },
-  { value: 'retail', label: 'Retail' },
-  { value: 'manufacturing', label: 'Manufacturing' },
-  { value: 'other', label: 'Other' },
-];
-
-const revenueRanges = [
-  { value: '<1M', label: 'Less than $1M' },
-  { value: '1M-10M', label: '$1M - $10M' },
-  { value: '10M-50M', label: '$10M - $50M' },
-  { value: '50M+', label: 'More than $50M' },
-];
-
 const CompanyDetails: React.FC<CompanyDetailsProps> = ({ formData, onChange }) => {
+  const industryOptions = [
+    { value: 'technology', label: 'Technology' },
+    { value: 'healthcare', label: 'Healthcare' },
+    { value: 'finance', label: 'Finance & Banking' },
+    { value: 'education', label: 'Education' },
+    { value: 'retail', label: 'Retail & E-commerce' },
+    { value: 'manufacturing', label: 'Manufacturing' },
+    { value: 'consulting', label: 'Consulting' },
+    { value: 'real-estate', label: 'Real Estate' },
+    { value: 'media', label: 'Media & Entertainment' },
+    { value: 'non-profit', label: 'Non-Profit' },
+    { value: 'other', label: 'Other' },
+  ];
+
+  const companySizeOptions = [
+    { value: '1-10', label: '1-10 employees' },
+    { value: '11-50', label: '11-50 employees' },
+    { value: '51-200', label: '51-200 employees' },
+    { value: '201-500', label: '201-500 employees' },
+    { value: '501-1000', label: '501-1000 employees' },
+    { value: '1000+', label: '1000+ employees' },
+  ];
+
   return (
     <div className="space-y-6">
+      <div className="text-center mb-6">
+        <h3 className="text-xl font-semibold text-white mb-2">Company Information</h3>
+        <p className="text-white/60">Tell us about your organization</p>
+      </div>
+
       <FormField
         label="Company Name"
         type="text"
-        value={formData.companyName}
+        value={formData.companyName || ''}
         onChange={(value) => onChange('companyName', value)}
+        placeholder="Enter your company name"
         required
       />
+
       <FormField
         label="Industry"
         type="select"
-        value={formData.industry}
+        value={formData.industry || ''}
         onChange={(value) => onChange('industry', value)}
-        options={industries}
+        options={industryOptions}
         required
       />
+
       <FormField
-        label="Company Size (Number of Employees)"
-        type="number"
-        value={formData.companySize}
-        onChange={(value) => onChange('companySize', value)}
-        required
-      />
-      <FormField
-        label="Revenue Range"
+        label="Company Size"
         type="select"
-        value={formData.revenueRange}
-        onChange={(value) => onChange('revenueRange', value)}
-        options={revenueRanges}
+        value={formData.companySize || ''}
+        onChange={(value) => onChange('companySize', value)}
+        options={companySizeOptions}
         required
       />
+
       <FormField
-        label="Website URL"
-        type="url"
-        value={formData.website}
+        label="Website"
+        type="text"
+        value={formData.website || ''}
         onChange={(value) => onChange('website', value)}
+        placeholder="https://yourcompany.com"
       />
-      <FormField
-        label="Headquarters Location"
-        type="text"
-        value={formData.location}
-        onChange={(value) => onChange('location', value)}
-        required
-      />
-      <FormField
-        label="Business Registration Number"
-        type="text"
-        value={formData.registrationNumber}
-        onChange={(value) => onChange('registrationNumber', value)}
-      />
-      <FormField
-        label="Tax ID"
-        type="text"
-        value={formData.taxId}
-        onChange={(value) => onChange('taxId', value)}
-      />
+
+      <div className="bg-[rgba(254,2,161,0.1)] border border-[rgba(254,2,161,0.3)] rounded-lg p-4">
+        <h4 className="text-[#FE02A1] font-semibold mb-2">💡 Pro Tip</h4>
+        <p className="text-white/80 text-sm">
+          Providing accurate company information helps us tailor our services to your specific industry needs and company size.
+        </p>
+      </div>
     </div>
   );
 };
