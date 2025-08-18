@@ -8,6 +8,7 @@ import ProjectGoals from './steps/ProjectGoals';
 import LegalCompliance from './steps/LegalCompliance';
 import BrandingMarketing from './steps/BrandingMarketing';
 import AdditionalPreferences from './steps/AdditionalPreferences';
+import AIFormAssistant from '../AIFormAssistant';
 
 interface ClientIntakeFormProps {
   isOpen: boolean;
@@ -121,6 +122,7 @@ const ClientIntakeForm: React.FC<ClientIntakeFormProps> = ({ isOpen, onClose }) 
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
+  const [aiHelpMessage, setAiHelpMessage] = useState('');
 
   const handleInputChange = (field: keyof FormData, value: any) => {
     setFormData((prev) => ({
@@ -199,6 +201,17 @@ const ClientIntakeForm: React.FC<ClientIntakeFormProps> = ({ isOpen, onClose }) 
     }
   };
 
+  const handleAISuggestion = (field: string, value: any) => {
+    handleInputChange(field as keyof FormData, value);
+    setAiHelpMessage(`AI suggestion applied: ${field} has been updated.`);
+    setTimeout(() => setAiHelpMessage(''), 3000);
+  };
+
+  const handleAIHelp = (message: string) => {
+    setAiHelpMessage(message);
+    setTimeout(() => setAiHelpMessage(''), 5000);
+  };
+
   if (!isOpen) return null;
 
   const progress = ((currentStep - 1) / (steps.length - 1)) * 100;
@@ -244,112 +257,132 @@ const ClientIntakeForm: React.FC<ClientIntakeFormProps> = ({ isOpen, onClose }) 
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
-      <div
-        className="absolute inset-0 bg-black bg-opacity-50 backdrop-blur-sm"
-        onClick={onClose}
-      />
-      <div className="relative w-full max-w-4xl bg-[rgba(0,0,0,0.95)] backdrop-blur-[10px] border border-[rgba(254,2,161,0.3)] rounded-2xl p-6 max-h-[90vh] overflow-y-auto">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h2 className="text-2xl font-bold text-white">Client Intake Form</h2>
-            <p className="text-white/60">Step {currentStep} of {steps.length}</p>
-          </div>
-          <button
-            onClick={onClose}
-            className="text-white/60 hover:text-white transition-colors"
-          >
-            <X size={24} />
-          </button>
-        </div>
-
-        {/* Progress Bar */}
-        <div className="mb-6">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm text-white/60">Progress</span>
-            <span className="text-sm text-white/60">{Math.round(progress)}%</span>
-          </div>
-          <div className="w-full bg-[rgba(255,255,255,0.1)] rounded-full h-2">
-            <div 
-              className="bg-[#FE02A1] h-2 rounded-full transition-all duration-300"
-              style={{ width: `${progress}%` }}
-            />
-          </div>
-        </div>
-
-        {/* Step Indicators */}
-        <div className="flex items-center justify-between mb-8 overflow-x-auto">
-          {steps.map((step, index) => (
-            <div
-              key={step.id}
-              className={`flex flex-col items-center min-w-[80px] ${
-                index < currentStep - 1 ? 'text-[#FE02A1]' : 
-                index === currentStep - 1 ? 'text-white' : 'text-white/40'
-              }`}
-            >
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm mb-2 transition-all duration-300 ${
-                index < currentStep - 1 ? 'bg-[#FE02A1] text-black' : 
-                index === currentStep - 1 ? 'bg-[#FE02A1] text-white' : 'bg-[rgba(255,255,255,0.1)]'
-              }`}>
-                {index < currentStep - 1 ? '✓' : step.icon}
-              </div>
-              <span className="text-xs text-center">{step.title}</span>
+    <>
+      <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+        <div
+          className="absolute inset-0 bg-black bg-opacity-50 backdrop-blur-sm"
+          onClick={onClose}
+        />
+        <div className="relative w-full max-w-4xl bg-[rgba(0,0,0,0.95)] backdrop-blur-[10px] border border-[rgba(254,2,161,0.3)] rounded-2xl p-6 max-h-[90vh] overflow-y-auto">
+          {/* Header */}
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h2 className="text-2xl font-bold text-white">Client Intake Form</h2>
+              <p className="text-white/60">Step {currentStep} of {steps.length}</p>
             </div>
-          ))}
-        </div>
+            <button
+              onClick={onClose}
+              className="text-white/60 hover:text-white transition-colors"
+            >
+              <X size={24} />
+            </button>
+          </div>
 
-        {/* Form Content */}
-        <form onSubmit={handleSubmit} className="mb-6">
-          {renderStep()}
-        </form>
+          {/* AI Help Message */}
+          {aiHelpMessage && (
+            <div className="mb-4 p-3 bg-[rgba(0,255,255,0.1)] border border-[rgba(0,255,255,0.3)] rounded-lg">
+              <div className="flex items-center space-x-2 text-cyan-400">
+                <span className="text-sm">🤖 AI Assistant:</span>
+                <span className="text-white/80 text-sm">{aiHelpMessage}</span>
+              </div>
+            </div>
+          )}
 
-        {/* Navigation Buttons */}
-        <div className="flex items-center justify-between pt-6 border-t border-[rgba(255,255,255,0.1)]">
-          <button
-            type="button"
-            onClick={handleBack}
-            disabled={currentStep === 1}
-            className="flex items-center space-x-2 px-4 py-2 text-white/60 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          >
-            <ChevronLeft size={20} />
-            <span>Previous</span>
-          </button>
+          {/* Progress Bar */}
+          <div className="mb-6">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm text-white/60">Progress</span>
+              <span className="text-sm text-white/60">{Math.round(progress)}%</span>
+            </div>
+            <div className="w-full bg-[rgba(255,255,255,0.1)] rounded-full h-2">
+              <div 
+                className="bg-[#FE02A1] h-2 rounded-full transition-all duration-300"
+                style={{ width: `${progress}%` }}
+              />
+            </div>
+          </div>
 
-          <div className="flex items-center space-x-3">
-            {currentStep < steps.length ? (
-              <button
-                type="button"
-                onClick={handleNext}
-                disabled={!validateStep(currentStep)}
-                className="flex items-center space-x-2 px-6 py-2 bg-[#FE02A1] hover:bg-[#FE02A1]/80 disabled:bg-[#FE02A1]/50 text-white rounded-lg font-semibold transition-colors disabled:cursor-not-allowed"
+          {/* Step Indicators */}
+          <div className="flex items-center justify-between mb-8 overflow-x-auto">
+            {steps.map((step, index) => (
+              <div
+                key={step.id}
+                className={`flex flex-col items-center min-w-[80px] ${
+                  index < currentStep - 1 ? 'text-[#FE02A1]' : 
+                  index === currentStep - 1 ? 'text-white' : 'text-white/40'
+                }`}
               >
-                <span>Next</span>
-                <ChevronRight size={20} />
-              </button>
-            ) : (
-              <button
-                type="submit"
-                disabled={isSubmitting || !validateStep(currentStep)}
-                className="flex items-center space-x-2 px-6 py-2 bg-[#FE02A1] hover:bg-[#FE02A1]/80 disabled:bg-[#FE02A1]/50 text-white rounded-lg font-semibold transition-colors disabled:cursor-not-allowed"
-              >
-                {isSubmitting ? (
-                  <>
-                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                    <span>Submitting...</span>
-                  </>
-                ) : (
-                  <>
-                    <span>Submit Form</span>
-                    <CheckCircle size={20} />
-                  </>
-                )}
-              </button>
-            )}
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm mb-2 transition-all duration-300 ${
+                  index < currentStep - 1 ? 'bg-[#FE02A1] text-black' : 
+                  index === currentStep - 1 ? 'bg-[#FE02A1] text-white' : 'bg-[rgba(255,255,255,0.1)]'
+                }`}>
+                  {index < currentStep - 1 ? '✓' : step.icon}
+                </div>
+                <span className="text-xs text-center">{step.title}</span>
+              </div>
+            ))}
+          </div>
+
+          {/* Form Content */}
+          <form onSubmit={handleSubmit} className="mb-6">
+            {renderStep()}
+          </form>
+
+          {/* Navigation Buttons */}
+          <div className="flex items-center justify-between pt-6 border-t border-[rgba(255,255,255,0.1)]">
+            <button
+              type="button"
+              onClick={handleBack}
+              disabled={currentStep === 1}
+              className="flex items-center space-x-2 px-4 py-2 text-white/60 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              <ChevronLeft size={20} />
+              <span>Previous</span>
+            </button>
+
+            <div className="flex items-center space-x-3">
+              {currentStep < steps.length ? (
+                <button
+                  type="button"
+                  onClick={handleNext}
+                  disabled={!validateStep(currentStep)}
+                  className="flex items-center space-x-2 px-6 py-2 bg-[#FE02A1] hover:bg-[#FE02A1]/80 disabled:bg-[#FE02A1]/50 text-white rounded-lg font-semibold transition-colors disabled:cursor-not-allowed"
+                >
+                  <span>Next</span>
+                  <ChevronRight size={20} />
+                </button>
+              ) : (
+                <button
+                  type="submit"
+                  disabled={isSubmitting || !validateStep(currentStep)}
+                  className="flex items-center space-x-2 px-6 py-2 bg-[#FE02A1] hover:bg-[#FE02A1]/80 disabled:bg-[#FE02A1]/50 text-white rounded-lg font-semibold transition-colors disabled:cursor-not-allowed"
+                >
+                  {isSubmitting ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      <span>Submitting...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>Submit Form</span>
+                      <CheckCircle size={20} />
+                    </>
+                  )}
+                </button>
+              )}
+            </div>
           </div>
         </div>
       </div>
-    </div>
+
+      {/* AI Form Assistant */}
+      <AIFormAssistant
+        currentStep={currentStep}
+        formData={formData}
+        onSuggestion={handleAISuggestion}
+        onHelp={handleAIHelp}
+      />
+    </>
   );
 };
 

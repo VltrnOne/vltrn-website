@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Menu, X, LogOut, Database, User, Settings, BarChart3, Users, Briefcase, FileText, Calendar } from 'lucide-react';
+import { Menu, X, LogOut, Database, User, Settings, BarChart3, Users, Briefcase, FileText, Calendar, Bot, Sparkles } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import clsx from 'clsx';
 import ClientIntakeForm from './forms/ClientIntakeForm';
@@ -8,7 +8,15 @@ import RegisterModal from './auth/RegisterModal';
 import { isAuthenticated, logout, getCurrentUser } from '../lib/authService';
 import ApiAccessButton from './ApiAccessButton';
 
-const Header = () => {
+interface HeaderProps {
+  onAIChatbotToggle?: () => void;
+  onAIFormAssistantToggle?: () => void;
+}
+
+const Header: React.FC<HeaderProps> = ({ 
+  onAIChatbotToggle, 
+  onAIFormAssistantToggle 
+}) => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isLoginOpen, setIsLoginOpen] = useState(false);
@@ -147,6 +155,31 @@ const Header = () => {
                 </div>
               )}
 
+              {/* AI Features */}
+              <div className="flex items-center space-x-3 mr-8">
+                {onAIChatbotToggle && (
+                  <button
+                    onClick={onAIChatbotToggle}
+                    className="flex items-center space-x-2 px-3 py-2 bg-[rgba(254,2,161,0.2)] hover:bg-[rgba(254,2,161,0.3)] border border-[rgba(254,2,161,0.4)] rounded-lg text-[#FE02A1] hover:text-white transition-all duration-200 group"
+                    title="AI Chatbot Assistant"
+                  >
+                    <Bot size={16} className="group-hover:scale-110 transition-transform" />
+                    <span className="text-sm font-medium">AI Chat</span>
+                  </button>
+                )}
+                
+                {onAIFormAssistantToggle && (
+                  <button
+                    onClick={onAIFormAssistantToggle}
+                    className="flex items-center space-x-2 px-3 py-2 bg-[rgba(0,255,255,0.2)] hover:bg-[rgba(0,255,255,0.3)] border border-[rgba(0,255,255,0.4)] rounded-lg text-cyan-400 hover:text-white transition-all duration-200 group"
+                    title="AI Form Assistant"
+                  >
+                    <Sparkles size={16} className="group-hover:scale-110 transition-transform" />
+                    <span className="text-sm font-medium">AI Help</span>
+                  </button>
+                )}
+              </div>
+
               {/* User Actions */}
               <div className="flex items-center space-x-4">
                 {userLoggedIn ? (
@@ -273,6 +306,38 @@ const Header = () => {
                     </div>
                   </div>
                 )}
+
+                {/* AI Features */}
+                <div className="px-4 py-2 border-t border-[rgba(254,2,161,0.2)]">
+                  <h3 className="text-[#FE02A1] font-semibold mb-3">AI Features</h3>
+                  <div className="space-y-2">
+                    {onAIChatbotToggle && (
+                      <button
+                        onClick={() => {
+                          onAIChatbotToggle();
+                          closeMobileMenu();
+                        }}
+                        className="w-full flex items-center space-x-3 px-3 py-2 text-[#FE02A1] hover:text-white hover:bg-[rgba(254,2,161,0.1)] rounded-lg transition-colors duration-200"
+                      >
+                        <Bot size={18} />
+                        <span>AI Chatbot</span>
+                      </button>
+                    )}
+                    
+                    {onAIFormAssistantToggle && (
+                      <button
+                        onClick={() => {
+                          onAIFormAssistantToggle();
+                          closeMobileMenu();
+                        }}
+                        className="w-full flex items-center space-x-3 px-3 py-2 text-cyan-400 hover:text-white hover:bg-[rgba(0,255,255,0.1)] rounded-lg transition-colors duration-200"
+                      >
+                        <Sparkles size={18} />
+                        <span>AI Form Assistant</span>
+                      </button>
+                    )}
+                  </div>
+                </div>
 
                 {/* User Actions */}
                 <div className="px-4 py-2 border-t border-[rgba(254,2,161,0.2)]">

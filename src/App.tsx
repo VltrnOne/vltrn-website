@@ -1,7 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Header from './components/Header';
 import ParticleBackground from './components/ParticleBackground';
+import AIChatbot from './components/AIChatbot';
+import AIFormAssistant from './components/AIFormAssistant';
 import Home from './pages/Home';
 import About from './pages/About';
 import Onboarding from './pages/Onboarding';
@@ -25,11 +27,25 @@ import DesignEngineering from './pages/chat/design-engineering';
 import LaunchStrategy from './pages/chat/launch-strategy';
 
 function App() {
+  const [isAIChatbotOpen, setIsAIChatbotOpen] = useState(false);
+  const [isAIFormAssistantOpen, setIsAIFormAssistantOpen] = useState(false);
+
+  const handleAIChatbotToggle = () => {
+    setIsAIChatbotOpen(!isAIChatbotOpen);
+  };
+
+  const handleAIFormAssistantToggle = () => {
+    setIsAIFormAssistantOpen(!isAIFormAssistantOpen);
+  };
+
   return (
     <Router>
       <div className="relative min-h-screen bg-gradient-radial from-[#0A0A0A] to-black">
         <ParticleBackground />
-        <Header />
+        <Header 
+          onAIChatbotToggle={handleAIChatbotToggle}
+          onAIFormAssistantToggle={handleAIFormAssistantToggle}
+        />
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/about" element={<About />} />
@@ -71,6 +87,13 @@ function App() {
           <Route path="/chat/design-engineering" element={<DesignEngineering />} />
           <Route path="/chat/launch-strategy" element={<LaunchStrategy />} />
         </Routes>
+        
+        {/* AI Components */}
+        <AIChatbot
+          isOpen={isAIChatbotOpen}
+          onClose={() => setIsAIChatbotOpen(false)}
+          onMinimize={() => setIsAIChatbotOpen(false)}
+        />
         
         {/* Debug Panel - only visible in development */}
         {import.meta.env.DEV && <DebugPanel />}
