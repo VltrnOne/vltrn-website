@@ -1,0 +1,80 @@
+# WordPress specific files
+wp-config.php
+wp-config-sample.php
+wp-content/uploads/
+wp-content/cache/
+wp-content/backup-db/
+wp-content/backups/
+wp-content/blogs.dir/
+wp-content/upgrade/
+wp-content/backup/
+wp-content/advanced-cache.php
+wp-content/wp-cache-config.php
+wp-content/plugins/hello.php
+
+# WordPress core files (if you want to exclude them)
+# wp-admin/
+# wp-includes/
+# wp-*.php
+# xmlrpc.php
+# index.php
+
+# Logs
+*.log
+php_errorlog
+error_log
+access_log
+
+# Database
+*.sql
+*.sqlite
+
+# Environment files
+.env
+.env.local
+.env.production
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.backup
+
+# Node modules (if using any build tools)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Build directories
+dist/
+build/
+public/
+
+# Cache directories
+.cache/
+.sass-cache/
+
+# Backup files
+*.zip
+*.tar.gz
+*.rar
+
+# SiteGround specific
+.sgs_encrypt_key.php
