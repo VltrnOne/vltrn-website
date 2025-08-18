@@ -1,3 +1,0 @@
-jQuery(async function($) {
-    
-});
