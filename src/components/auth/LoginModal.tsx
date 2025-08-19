@@ -1,3 +1,5 @@
+Letswin2025!
+LLetswin2025!
 import React, { useState, useEffect } from 'react';
 import { X, Eye, EyeOff, Mail, Lock, AlertCircle, CheckCircle } from 'lucide-react';
 import { login, requestNewVerificationCode, resetPassword } from '../../lib/authService';
@@ -6,6 +8,7 @@ interface LoginModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSwitchToRegister: () => void;
+  onLoginSuccess?: () => void;
   verificationError?: boolean;
 }
 
@@ -13,6 +16,7 @@ const LoginModal: React.FC<LoginModalProps> = ({
   isOpen,
   onClose,
   onSwitchToRegister,
+  onLoginSuccess,
   verificationError = false
 }) => {
   const [email, setEmail] = useState('');
@@ -51,10 +55,12 @@ const LoginModal: React.FC<LoginModalProps> = ({
 
     try {
       const user = await login(email, password);
-      setSuccess('Login successful! Redirecting...');
+      setSuccess('Login successful!');
       setTimeout(() => {
         onClose();
-        window.location.reload(); // Refresh to update auth state
+        if (onLoginSuccess) {
+          onLoginSuccess();
+        }
       }, 1000);
     } catch (err: any) {
       setError(err.message || 'Login failed. Please try again.');

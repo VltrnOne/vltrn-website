@@ -5,35 +5,54 @@ import { Link } from 'react-router-dom';
 import { isAuthenticated, getCurrentUser } from '../lib/authService';
 import Sphere from './Sphere';
 import ClientIntakeForm from './forms/ClientIntakeForm';
+import LoginModal from './auth/LoginModal';
+import RegisterModal from './auth/RegisterModal';
 
 const Hero = () => {
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [isLoginOpen, setIsLoginOpen] = useState(false);
+  const [isRegisterOpen, setIsRegisterOpen] = useState(false);
+
+  console.log('🚀 Hero component is rendering...');
 
   const handleGetStarted = () => {
+    console.log('🎯 Get Started button clicked!');
+    
     if (isAuthenticated()) {
-      // Check if user is verified
+      console.log('✅ User is authenticated, opening client intake form...');
       const currentUser = getCurrentUser();
       if (currentUser?.isVerified) {
         setIsFormOpen(true);
       } else {
-        // Use state to indicate we want to show login screen with a verification error message
-        window.history.pushState({ 
-          showLogin: true, 
-          verificationError: true,
-          from: '/onboarding' 
-        }, '', '');
-        // Trigger a state update to cause a re-render that will show the login modal
-        window.dispatchEvent(new PopStateEvent('popstate'));
+        console.log('⚠️ User not verified, showing login...');
+        setIsLoginOpen(true);
       }
     } else {
-      // Use state to indicate we want to show login screen with a redirect to onboarding after
-      window.history.pushState({ 
-        showLogin: true, 
-        from: '/onboarding' 
-      }, '', '');
-      // Trigger a state update to cause a re-render that will show the login modal
-      window.dispatchEvent(new PopStateEvent('popstate'));
+      console.log('❌ User not authenticated, showing registration...');
+      setIsRegisterOpen(true);
     }
+  };
+
+  const switchToLogin = () => {
+    setIsRegisterOpen(false);
+    setIsLoginOpen(true);
+  };
+
+  const switchToRegister = () => {
+    setIsLoginOpen(false);
+    setIsRegisterOpen(true);
+  };
+
+  const handleLoginSuccess = () => {
+    setIsLoginOpen(false);
+    console.log('✅ Login successful, opening client intake form...');
+    setIsFormOpen(true);
+  };
+
+  const handleRegisterSuccess = () => {
+    setIsRegisterOpen(false);
+    console.log('✅ Registration successful, opening client intake form...');
+    setIsFormOpen(true);
   };
 
   return (
@@ -84,14 +103,14 @@ const Hero = () => {
               <div className="flex flex-col sm:flex-row gap-4">
                 <button
                   onClick={handleGetStarted}
-                  className="group relative px-8 py-3 bg-[#FE02A1] text-white rounded-lg overflow-hidden transition-all duration-300 hover:scale-105 hover:shadow-[0_0_30px_#FE02A1]"
+                  className="group relative px-8 py-3 bg-[#FE02A1] text-white rounded-lg overflow-hidden transition-all duration-300 hover:scale-105 hover:shadow-[0_0_20px_#FE02A1]"
                 >
                   <span className="relative z-10">Get Started</span>
                   <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
                 </button>
                 <Link
                   to="/about"
-                  className="group relative px-8 py-3 bg-transparent border-2 border-[#FE02A1] text-white rounded-lg overflow-hidden transition-all duration-300 hover:scale-105 hover:shadow-[0_0_30px_#FE02A1]"
+                  className="group relative px-8 py-3 bg-transparent border-2 border-[#FE02A1] text-white rounded-lg overflow-hidden transition-all duration-300 hover:scale-105 hover:shadow-[0_0_20px_#FE02A1]"
                 >
                   <span className="relative z-10">Learn More</span>
                   <div className="absolute inset-0 bg-[#FE02A1] -translate-x-full group-hover:translate-x-0 transition-transform duration-300" />
@@ -120,7 +139,22 @@ const Hero = () => {
         </div>
       </div>
 
+      {/* Forms and Modals */}
       <ClientIntakeForm isOpen={isFormOpen} onClose={() => setIsFormOpen(false)} />
+      
+      <LoginModal
+        isOpen={isLoginOpen}
+        onClose={() => setIsLoginOpen(false)}
+        onSwitchToRegister={switchToRegister}
+        onLoginSuccess={handleLoginSuccess}
+      />
+      
+      <RegisterModal
+        isOpen={isRegisterOpen}
+        onClose={() => setIsRegisterOpen(false)}
+        onSwitchToLogin={switchToLogin}
+        onRegisterSuccess={handleRegisterSuccess}
+      />
     </div>
   );
 };

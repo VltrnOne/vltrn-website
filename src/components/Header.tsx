@@ -1,422 +1,144 @@
-import React, { useState, useEffect } from 'react';
-import { Menu, X, LogOut, Database, User, Settings, BarChart3, Users, Briefcase, FileText, Calendar, Bot, Sparkles } from 'lucide-react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
-import clsx from 'clsx';
-import ClientIntakeForm from './forms/ClientIntakeForm';
-import LoginModal from './auth/LoginModal';
-import RegisterModal from './auth/RegisterModal';
-import { isAuthenticated, logout, getCurrentUser } from '../lib/authService';
-import ApiAccessButton from './ApiAccessButton';
+import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 
-interface HeaderProps {
-  onAIChatbotToggle?: () => void;
-  onAIFormAssistantToggle?: () => void;
-}
-
-const Header: React.FC<HeaderProps> = ({ 
-  onAIChatbotToggle, 
-  onAIFormAssistantToggle 
-}) => {
+const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isFormOpen, setIsFormOpen] = useState(false);
-  const [isLoginOpen, setIsLoginOpen] = useState(false);
-  const [isRegisterOpen, setIsRegisterOpen] = useState(false);
-  const [verificationError, setVerificationError] = useState(false);
-  const [userLoggedIn, setUserLoggedIn] = useState(false);
-  const location = useLocation();
-  const navigate = useNavigate();
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
-  // Check authentication status when component mounts and location changes
-  useEffect(() => {
-    setUserLoggedIn(isAuthenticated());
-    
-    // Check if we should show login modal from location state
-    if (location.state?.showLogin) {
-      setIsLoginOpen(true);
-      if (location.state.verificationError) {
-        setVerificationError(true);
-      } else {
-        setVerificationError(false);
-      }
-      // Clear the state to prevent modal showing on page refresh
-      window.history.replaceState({}, document.title);
-    } else if (location.state?.showRegister) {
-      setIsRegisterOpen(true);
-      // Clear the state to prevent modal showing on page refresh
-      window.history.replaceState({}, document.title);
-    }
-  }, [location]);
+  console.log('🚀 Header component is rendering...');
 
-  const navItems = [
-    { name: 'Community', path: '/community', icon: Users },
-    { name: 'Partners', path: '/partners', icon: Briefcase },
-    { name: 'About', path: '/about', icon: User },
-  ];
-
-  const managementItems = [
-    { name: 'Client Intakes', path: '/client-intakes', icon: FileText },
-    { name: 'Projects', path: '/projects', icon: Briefcase },
-    { name: 'Tasks', path: '/tasks', icon: Calendar },
-    { name: 'Resources', path: '/resources', icon: Database },
-    { name: 'Analytics', path: '/performance-analytics', icon: BarChart3 },
-  ];
-
-  const isActive = (path: string) => location.pathname === path;
-
-  const handleLogout = () => {
-    logout();
-    setUserLoggedIn(false);
-    setIsMenuOpen(false);
-    // Redirect to home page after logout
-    navigate('/');
-  };
-  
-  const handleStartNowClick = () => {
-    const currentUser = getCurrentUser();
-    
-    if (!userLoggedIn) {
-      setIsLoginOpen(true);
-    } else if (currentUser && !currentUser.isVerified) {
-      // User is logged in but not verified
-      setVerificationError(true);
-      setIsLoginOpen(true);
-    } else {
-      setIsFormOpen(true);
-    }
-  };
-  
-  const switchToRegister = () => {
-    setIsLoginOpen(false);
-    setIsRegisterOpen(true);
-  };
-  
-  const switchToLogin = () => {
-    setIsRegisterOpen(false);
-    setIsLoginOpen(true);
+  const toggleMenu = () => {
+    setIsMenuOpen(!isMenuOpen);
   };
 
-  const closeMobileMenu = () => {
-    setIsMenuOpen(false);
+  const handleLogin = () => {
+    alert('Login button clicked! (Mock function)');
+  };
+
+  const handleRegister = () => {
+    alert('Register button clicked! (Mock function)');
   };
 
   return (
-    <>
-      <header className="fixed w-full z-[1000] px-4 py-2">
-        <div className="max-w-7xl mx-auto">
-          <nav className="relative flex items-center justify-between h-16 bg-[rgba(255,255,255,0.1)] backdrop-blur-[10px] border border-[rgba(254,2,161,0.3)] rounded-lg shadow-[0_0_20px_rgba(254,2,161,0.2)]">
-            {/* Logo */}
-            <div className="px-4">
-              <Link to="/" className="text-[#FE02A1] font-['Exo_2'] text-2xl font-bold hover:text-[#FE02A1]/80 transition-colors">
+    <header className="bg-black text-white shadow-lg fixed w-full top-0 z-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between items-center h-16">
+          {/* Logo */}
+          <div className="flex-shrink-0">
+            <Link to="/" className="flex items-center">
+              <div className="w-8 h-8 bg-gradient-to-r from-pink-500 to-purple-600 rounded-lg flex items-center justify-center mr-2">
+                <span className="text-white font-bold text-sm">V</span>
+              </div>
+              <span className="text-xl font-bold bg-gradient-to-r from-pink-500 to-purple-600 bg-clip-text text-transparent">
                 VLTRN
-              </Link>
-            </div>
+              </span>
+            </Link>
+          </div>
 
-            {/* Desktop Navigation */}
-            <div className="hidden md:flex items-center justify-end flex-1">
-              {/* Main Navigation */}
-              <div className="flex items-center space-x-8 mr-8">
-                {navItems.map((item) => {
-                  const Icon = item.icon;
-                  return (
-                    <Link
-                      key={item.path}
-                      to={item.path}
-                      className={clsx(
-                        "flex items-center space-x-2 text-white/80 hover:text-[#FE02A1] transition-colors duration-200",
-                        isActive(item.path) && "text-[#FE02A1]"
-                      )}
-                    >
-                      <Icon size={16} />
-                      <span>{item.name}</span>
-                    </Link>
-                  );
-                })}
-              </div>
-
-              {/* Management Navigation (only show when logged in) */}
-              {userLoggedIn && (
-                <div className="flex items-center space-x-6 mr-8">
-                  {managementItems.map((item) => {
-                    const Icon = item.icon;
-                    return (
-                      <Link
-                        key={item.path}
-                        to={item.path}
-                        className={clsx(
-                          "flex items-center space-x-2 text-white/80 hover:text-[#FE02A1] transition-colors duration-200",
-                          isActive(item.path) && "text-[#FE02A1]"
-                        )}
-                      >
-                        <Icon size={16} />
-                        <span>{item.name}</span>
-                      </Link>
-                    );
-                  })}
-                </div>
-              )}
-
-              {/* AI Features */}
-              <div className="flex items-center space-x-3 mr-8">
-                {onAIChatbotToggle && (
-                  <button
-                    onClick={onAIChatbotToggle}
-                    className="flex items-center space-x-2 px-3 py-2 bg-[rgba(254,2,161,0.2)] hover:bg-[rgba(254,2,161,0.3)] border border-[rgba(254,2,161,0.4)] rounded-lg text-[#FE02A1] hover:text-white transition-all duration-200 group"
-                    title="AI Chatbot Assistant"
-                  >
-                    <Bot size={16} className="group-hover:scale-110 transition-transform" />
-                    <span className="text-sm font-medium">AI Chat</span>
-                  </button>
-                )}
-                
-                {onAIFormAssistantToggle && (
-                  <button
-                    onClick={onAIFormAssistantToggle}
-                    className="flex items-center space-x-2 px-3 py-2 bg-[rgba(0,255,255,0.2)] hover:bg-[rgba(0,255,255,0.3)] border border-[rgba(0,255,255,0.4)] rounded-lg text-cyan-400 hover:text-white transition-all duration-200 group"
-                    title="AI Form Assistant"
-                  >
-                    <Sparkles size={16} className="group-hover:scale-110 transition-transform" />
-                    <span className="text-sm font-medium">AI Help</span>
-                  </button>
-                )}
-              </div>
-
-              {/* User Actions */}
-              <div className="flex items-center space-x-4">
-                {userLoggedIn ? (
-                  <>
-                    <button
-                      onClick={() => setIsFormOpen(true)}
-                      className="bg-[#FE02A1] hover:bg-[#FE02A1]/80 text-white px-6 py-2 rounded-lg font-semibold transition-colors duration-200"
-                    >
-                      Start New Project
-                    </button>
-                    <div className="relative group">
-                      <button className="flex items-center space-x-2 text-white/80 hover:text-white transition-colors duration-200">
-                        <User size={20} />
-                        <span>{getCurrentUser()?.name || 'User'}</span>
-                      </button>
-                      {/* Dropdown Menu */}
-                      <div className="absolute right-0 mt-2 w-48 bg-[rgba(0,0,0,0.9)] backdrop-blur-[10px] border border-[rgba(254,2,161,0.3)] rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
-                        <div className="py-2">
-                          <Link
-                            to="/dashboard"
-                            className="flex items-center space-x-2 px-4 py-2 text-white/80 hover:text-[#FE02A1] hover:bg-[rgba(254,2,161,0.1)] transition-colors duration-200"
-                          >
-                            <BarChart3 size={16} />
-                            <span>Dashboard</span>
-                          </Link>
-                          <Link
-                            to="/onboarding"
-                            className="flex items-center space-x-2 px-4 py-2 text-white/80 hover:text-[#FE02A1] hover:bg-[rgba(254,2,161,0.1)] transition-colors duration-200"
-                          >
-                            <Settings size={16} />
-                            <span>Settings</span>
-                          </Link>
-                          <button
-                            onClick={handleLogout}
-                            className="flex items-center space-x-2 w-full px-4 py-2 text-white/80 hover:text-red-400 hover:bg-[rgba(239,68,68,0.1)] transition-colors duration-200"
-                          >
-                            <LogOut size={16} />
-                            <span>Logout</span>
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <button
-                      onClick={() => setIsLoginOpen(true)}
-                      className="text-white/80 hover:text-[#FE02A1] transition-colors duration-200"
-                    >
-                      Login
-                    </button>
-                    <button
-                      onClick={() => setIsRegisterOpen(true)}
-                      className="bg-[#FE02A1] hover:bg-[#FE02A1]/80 text-white px-6 py-2 rounded-lg font-semibold transition-colors duration-200"
-                    >
-                      Get Started
-                    </button>
-                  </>
-                )}
-              </div>
-            </div>
-
-            {/* Mobile Menu Button */}
-            <div className="md:hidden">
-              <button
-                onClick={() => setIsMenuOpen(!isMenuOpen)}
-                className="text-white/80 hover:text-[#FE02A1] transition-colors duration-200"
-              >
-                {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
-              </button>
-            </div>
+          {/* Desktop Navigation */}
+          <nav className="hidden md:flex space-x-8">
+            <Link to="/" className="text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors">
+              Home
+            </Link>
+            <Link to="/about" className="text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors">
+              About
+            </Link>
+            <Link to="/services" className="text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors">
+              Services
+            </Link>
+            <Link to="/contact" className="text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors">
+              Contact
+            </Link>
           </nav>
 
-          {/* Mobile Navigation Menu */}
-          {isMenuOpen && (
-            <div className="md:hidden absolute top-full left-0 right-0 mt-2 bg-[rgba(0,0,0,0.95)] backdrop-blur-[10px] border border-[rgba(254,2,161,0.3)] rounded-lg shadow-lg">
-              <div className="py-4">
-                {/* Main Navigation */}
-                <div className="px-4 py-2">
-                  <h3 className="text-[#FE02A1] font-semibold mb-3">Navigation</h3>
-                  <div className="space-y-2">
-                    {navItems.map((item) => {
-                      const Icon = item.icon;
-                      return (
-                        <Link
-                          key={item.path}
-                          to={item.path}
-                          onClick={closeMobileMenu}
-                          className={clsx(
-                            "flex items-center space-x-3 px-3 py-2 text-white/80 hover:text-[#FE02A1] hover:bg-[rgba(254,2,161,0.1)] rounded-lg transition-colors duration-200",
-                            isActive(item.path) && "text-[#FE02A1] bg-[rgba(254,2,161,0.1)]"
-                          )}
-                        >
-                          <Icon size={18} />
-                          <span>{item.name}</span>
-                        </Link>
-                      );
-                    })}
-                  </div>
-                </div>
+          {/* Auth Buttons */}
+          <div className="hidden md:flex items-center space-x-4">
+            {!isLoggedIn ? (
+              <>
+                <button
+                  onClick={handleLogin}
+                  className="text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                >
+                  Login
+                </button>
+                <button
+                  onClick={handleRegister}
+                  className="bg-gradient-to-r from-pink-500 to-purple-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:from-pink-600 hover:to-purple-700 transition-all"
+                >
+                  Get Started
+                </button>
+              </>
+            ) : (
+              <button
+                onClick={() => setIsLoggedIn(false)}
+                className="text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors"
+              >
+                Logout
+              </button>
+            )}
+          </div>
 
-                {/* Management Navigation (only show when logged in) */}
-                {userLoggedIn && (
-                  <div className="px-4 py-2 border-t border-[rgba(254,2,161,0.2)]">
-                    <h3 className="text-[#FE02A1] font-semibold mb-3">Management</h3>
-                    <div className="space-y-2">
-                      {managementItems.map((item) => {
-                        const Icon = item.icon;
-                        return (
-                          <Link
-                            key={item.path}
-                            to={item.path}
-                            onClick={closeMobileMenu}
-                            className={clsx(
-                              "flex items-center space-x-3 px-3 py-2 text-white/80 hover:text-[#FE02A1] hover:bg-[rgba(254,2,161,0.1)] rounded-lg transition-colors duration-200",
-                              isActive(item.path) && "text-[#FE02A1] bg-[rgba(254,2,161,0.1)]"
-                            )}
-                          >
-                            <Icon size={18} />
-                            <span>{item.name}</span>
-                          </Link>
-                        );
-                      })}
-                    </div>
-                  </div>
+          {/* Mobile menu button */}
+          <div className="md:hidden">
+            <button
+              onClick={toggleMenu}
+              className="text-gray-400 hover:text-white focus:outline-none focus:text-white"
+            >
+              <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                {isMenuOpen ? (
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                ) : (
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
                 )}
-
-                {/* AI Features */}
-                <div className="px-4 py-2 border-t border-[rgba(254,2,161,0.2)]">
-                  <h3 className="text-[#FE02A1] font-semibold mb-3">AI Features</h3>
-                  <div className="space-y-2">
-                    {onAIChatbotToggle && (
-                      <button
-                        onClick={() => {
-                          onAIChatbotToggle();
-                          closeMobileMenu();
-                        }}
-                        className="w-full flex items-center space-x-3 px-3 py-2 text-[#FE02A1] hover:text-white hover:bg-[rgba(254,2,161,0.1)] rounded-lg transition-colors duration-200"
-                      >
-                        <Bot size={18} />
-                        <span>AI Chatbot</span>
-                      </button>
-                    )}
-                    
-                    {onAIFormAssistantToggle && (
-                      <button
-                        onClick={() => {
-                          onAIFormAssistantToggle();
-                          closeMobileMenu();
-                        }}
-                        className="w-full flex items-center space-x-3 px-3 py-2 text-cyan-400 hover:text-white hover:bg-[rgba(0,255,255,0.1)] rounded-lg transition-colors duration-200"
-                      >
-                        <Sparkles size={18} />
-                        <span>AI Form Assistant</span>
-                      </button>
-                    )}
-                  </div>
-                </div>
-
-                {/* User Actions */}
-                <div className="px-4 py-2 border-t border-[rgba(254,2,161,0.2)]">
-                  {userLoggedIn ? (
-                    <div className="space-y-2">
-                      <button
-                        onClick={() => {
-                          setIsFormOpen(true);
-                          closeMobileMenu();
-                        }}
-                        className="w-full bg-[#FE02A1] hover:bg-[#FE02A1]/80 text-white px-6 py-3 rounded-lg font-semibold transition-colors duration-200"
-                      >
-                        Start New Project
-                      </button>
-                      <div className="text-center text-white/60 text-sm">
-                        Welcome, {getCurrentUser()?.name || 'User'}!
-                      </div>
-                      <button
-                        onClick={handleLogout}
-                        className="w-full flex items-center justify-center space-x-2 px-4 py-2 text-white/80 hover:text-red-400 hover:bg-[rgba(239,68,68,0.1)] rounded-lg transition-colors duration-200"
-                      >
-                        <LogOut size={18} />
-                        <span>Logout</span>
-                      </button>
-                    </div>
-                  ) : (
-                    <div className="space-y-2">
-                      <button
-                        onClick={() => {
-                          setIsLoginOpen(true);
-                          closeMobileMenu();
-                        }}
-                        className="w-full text-white/80 hover:text-[#FE02A1] transition-colors duration-200"
-                      >
-                        Login
-                      </button>
-                      <button
-                        onClick={() => {
-                          setIsRegisterOpen(true);
-                          closeMobileMenu();
-                        }}
-                        className="w-full bg-[#FE02A1] hover:bg-[#FE02A1]/80 text-white px-6 py-3 rounded-lg font-semibold transition-colors duration-200"
-                      >
-                        Get Started
-                      </button>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
+              </svg>
+            </button>
+          </div>
         </div>
-      </header>
 
-      {/* Modals */}
-      {isFormOpen && (
-        <ClientIntakeForm
-          isOpen={isFormOpen}
-          onClose={() => setIsFormOpen(false)}
-        />
-      )}
-
-      {isLoginOpen && (
-        <LoginModal
-          isOpen={isLoginOpen}
-          onClose={() => setIsLoginOpen(false)}
-          onSwitchToRegister={switchToRegister}
-          verificationError={verificationError}
-        />
-      )}
-
-      {isRegisterOpen && (
-        <RegisterModal
-          isOpen={isRegisterOpen}
-          onClose={() => setIsRegisterOpen(false)}
-          onSwitchToLogin={switchToLogin}
-        />
-      )}
-    </>
+        {/* Mobile Navigation */}
+        {isMenuOpen && (
+          <div className="md:hidden">
+            <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 bg-gray-900">
+              <Link to="/" className="text-gray-300 hover:text-white block px-3 py-2 rounded-md text-base font-medium">
+                Home
+              </Link>
+              <Link to="/about" className="text-gray-300 hover:text-white block px-3 py-2 rounded-md text-base font-medium">
+                About
+              </Link>
+              <Link to="/services" className="text-gray-300 hover:text-white block px-3 py-2 rounded-md text-base font-medium">
+                Services
+              </Link>
+              <Link to="/contact" className="text-gray-300 hover:text-white block px-3 py-2 rounded-md text-base font-medium">
+                Contact
+              </Link>
+              {!isLoggedIn ? (
+                <>
+                  <button
+                    onClick={handleLogin}
+                    className="text-gray-300 hover:text-white block w-full text-left px-3 py-2 rounded-md text-base font-medium"
+                  >
+                    Login
+                  </button>
+                  <button
+                    onClick={handleRegister}
+                    className="bg-gradient-to-r from-pink-500 to-purple-600 text-white block w-full text-left px-3 py-2 rounded-md text-base font-medium"
+                  >
+                    Get Started
+                  </button>
+                </>
+              ) : (
+                <button
+                  onClick={() => setIsLoggedIn(false)}
+                  className="text-gray-300 hover:text-white block w-full text-left px-3 py-2 rounded-md text-base font-medium"
+                >
+                  Logout
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+    </header>
   );
 };
 

@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { Bug, X, RefreshCw, ChevronDown, ChevronUp, Mail } from 'lucide-react';
-import { supabase } from '../lib/supabase';
 
 const DebugPanel: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -13,42 +12,35 @@ const DebugPanel: React.FC = () => {
     setError(null);
 
     try {
-      // Get current session
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      // Get current user from localStorage
+      const userJson = localStorage.getItem('vltrn_user');
+      const token = localStorage.getItem('vltrn_token');
       
-      // Get current user
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
-      
-      if (sessionError) {
-        throw new Error(`Session error: ${sessionError.message}`);
-      }
-      
-      if (userError) {
-        throw new Error(`User error: ${userError.message}`);
-      }
+      const user = userJson ? JSON.parse(userJson) : null;
       
       setDebugInfo({
-        session: session ? {
-          access_token: `${session.access_token?.substring(0, 10)}...`,
-          refresh_token: session.refresh_token ? `${session.refresh_token.substring(0, 10)}...` : null,
-          expires_at: session.expires_at,
+        session: token ? {
+          access_token: `${token.substring(0, 10)}...`,
+          refresh_token: null,
+          expires_at: null,
         } : null,
         user: user ? {
           id: user.id,
           email: user.email,
-          created_at: user.created_at,
-          last_sign_in_at: user.last_sign_in_at,
-          email_confirmed_at: user.email_confirmed_at,
-          confirmation_sent_at: user.confirmation_sent_at,
-          recovery_sent_at: user.recovery_sent_at,
-          user_metadata: user.user_metadata,
+          created_at: null,
+          last_sign_in_at: null,
+          email_confirmed_at: null,
+          confirmation_sent_at: null,
+          recovery_sent_at: null,
+          user_metadata: null,
         } : null,
         localStorage: {
-          token: localStorage.getItem('token') ? 'Present' : 'Missing',
-          user: localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user') || '{}') : 'Missing'
+          token: token ? 'Present' : 'Missing',
+          user: user ? user : 'Missing'
         },
-        supabaseConfig: {
-          url: import.meta.env.VITE_SUPABASE_URL || 'Not set',
+        backendConfig: {
+          url: import.meta.env.VITE_API_BASE_URL || 'https://api.vltrn.agency',
+          status: 'Using VLTRN Backend'
         }
       });
     } catch (err) {
@@ -83,15 +75,20 @@ const DebugPanel: React.FC = () => {
         throw new Error('No email found in user data');
       }
       
-      const { error } = await supabase.auth.resend({
-        type: 'signup',
-        email: user.email,
-        options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback`
-        }
+      // Use VLTRN's backend instead of Supabase
+      const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://api.vltrn.agency';
+      const response = await fetch(`${API_BASE_URL}/auth/resend-verification`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ email: user.email })
       });
       
-      if (error) throw error;
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to resend verification email');
+      }
       
       setError(null);
       alert(`Verification email resent to ${user.email}`);
@@ -192,8 +189,8 @@ const DebugPanel: React.FC = () => {
               
               {/* Configuration */}
               <DebugSection
-                title="Supabase Configuration"
-                data={debugInfo.supabaseConfig}
+                        title="Backend Configuration"
+        data={debugInfo.backendConfig}
               />
             </div>
           ) : (

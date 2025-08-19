@@ -1,20 +1,19 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { X, Lock, Mail, AlertCircle, User, Phone, CheckCircle } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { X, Lock, Mail, AlertCircle, User, Phone, CheckCircle, Shield } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { register } from '../../lib/authService';
 import VerificationModal from './VerificationModal';
-import ReCAPTCHA from 'react-google-recaptcha';
 
 interface RegisterModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSwitchToLogin: () => void;
+  onRegisterSuccess?: () => void;
 }
 
-const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, onSwitchToLogin }) => {
+const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, onSwitchToLogin, onRegisterSuccess }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const recaptchaRef = useRef<ReCAPTCHA>(null);
   const [formData, setFormData] = useState({
     name: '',
     phone: '',
@@ -22,40 +21,26 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, onSwitch
     password: '',
     confirmPassword: '',
   });
-  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const [verificationCode, setVerificationCode] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [showVerification, setShowVerification] = useState(false);
-  const [captchaReady, setCaptchaReady] = useState(false);
+  const [verificationSent, setVerificationSent] = useState(false);
 
   // Get redirect path from location state if available
   const from = location.state?.from || '/onboarding';
 
-  // Monitor when captcha loads
+  // Send verification code when modal opens
   useEffect(() => {
-    // Create a mutation observer to detect when the captcha iframe loads
-    const observer = new MutationObserver((mutations) => {
-      const captchaIframe = document.querySelector('iframe[src*="recaptcha"]');
-      if (captchaIframe) {
-        setCaptchaReady(true);
-        observer.disconnect();
-      }
-    });
-    
-    // Start observing document for captcha iframe
-    observer.observe(document.body, {
-      childList: true,
-      subtree: true
-    });
-    
-    return () => observer.disconnect();
-  }, [isOpen]);
+    if (isOpen && !verificationSent) {
+      // In a real implementation, this would send a verification code to the user's phone/email
+      setVerificationSent(true);
+    }
+  }, [isOpen, verificationSent]);
 
-  const handleCaptchaChange = (token: string | null) => {
-    console.log("CAPTCHA completed with token:", token ? "Valid token" : "No token");
-    setCaptchaToken(token);
-    // Clear any previous CAPTCHA errors when the user completes a new CAPTCHA
-    if (token && error?.toLowerCase().includes('captcha')) {
+  const handleVerificationChange = (code: string) => {
+    setVerificationCode(code);
+    if (code && error?.toLowerCase().includes('verification')) {
       setError(null);
     }
   };
@@ -75,9 +60,9 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, onSwitch
       return;
     }
 
-    // Validate CAPTCHA
-    if (!captchaToken) {
-      setError("Please complete the CAPTCHA verification");
+    // Validate verification code
+    if (!verificationCode) {
+      setError("Please enter the verification code sent to your phone/email");
       return;
     }
     
@@ -99,11 +84,8 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, onSwitch
       }
       setShowVerification(false);
       
-      // Reset CAPTCHA on error
-      if (recaptchaRef.current) {
-        recaptchaRef.current.reset();
-        setCaptchaToken(null);
-      }
+      // Reset verification code on error
+      setVerificationCode('');
     } finally {
       setIsLoading(false);
     }
@@ -115,8 +97,10 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, onSwitch
     setShowVerification(false);
     onClose();
     
-    // Switch to login modal - user needs to login again after verification
-    onSwitchToLogin();
+    // Call success callback if provided
+    if (onRegisterSuccess) {
+      onRegisterSuccess();
+    }
   };
 
   if (!isOpen) return null;
@@ -234,32 +218,32 @@ const RegisterModal: React.FC<RegisterModalProps> = ({ isOpen, onClose, onSwitch
               </div>
             </div>
 
-            {/* CAPTCHA */}
-            <div className="flex justify-center mt-4">
-              <div className="relative w-full">
-                <ReCAPTCHA
-                  ref={recaptchaRef}
-                  sitekey="6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI" // Google's test key
-                  onChange={handleCaptchaChange}
-                  theme="dark"
+            {/* Verification Code */}
+            <div>
+              <label className="block text-sm font-medium text-white mb-1">
+                Verification Code
+              </label>
+              <div className="relative">
+                <input
+                  type="text"
+                  value={verificationCode}
+                  onChange={(e) => handleVerificationChange(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2 bg-[rgba(255,255,255,0.05)] border border-[rgba(255,255,255,0.1)] rounded-lg text-white placeholder-white/50 focus:border-[#FE02A1] transition-colors duration-300"
+                  placeholder="Enter verification code"
+                  required
                 />
-                
-                {!captchaReady && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded">
-                    <div className="text-white text-sm flex items-center gap-2">
-                      <div className="w-4 h-4 border-2 border-[#FE02A1] border-t-transparent rounded-full animate-spin"></div>
-                      Loading CAPTCHA...
-                    </div>
-                  </div>
-                )}
+                <Shield className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
               </div>
+              <p className="text-xs text-white/60 mt-1">
+                A verification code has been sent to your phone/email
+              </p>
             </div>
 
-            {/* CAPTCHA Status */}
+            {/* Verification Status */}
             <div className="text-xs flex items-center">
-              <div className={`w-2 h-2 rounded-full ${captchaToken ? 'bg-green-400' : 'bg-yellow-400'} mr-2`}></div>
+              <div className={`w-2 h-2 rounded-full ${verificationCode ? 'bg-green-400' : 'bg-yellow-400'} mr-2`}></div>
               <span className="text-white/60">
-                {captchaToken ? 'CAPTCHA verified' : 'CAPTCHA verification required'}
+                {verificationCode ? 'Verification code entered' : 'Verification code required'}
               </span>
             </div>
 
