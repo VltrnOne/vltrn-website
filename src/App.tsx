@@ -2,47 +2,50 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Header from './components/Header';
 import Home from './pages/Home';
+import About from './pages/About';
+import Services from './pages/Services';
+import Contact from './pages/Contact';
+import Dashboard from './pages/Dashboard';
+import Community from './pages/Community';
+import Projects from './pages/Projects';
+import Tasks from './pages/Tasks';
+import Resources from './pages/Resources';
+import ClientIntakePage from './pages/ClientIntakePage';
+import APITestPage from './pages/APITestPage';
+import VerificationCallback from './pages/VerificationCallback';
+import AuthGuard from './components/AuthGuard';
 
 function App() {
-  console.log('🚀 App component is rendering...');
+  console.log('🚀 VLTRN Platform - Production Version Loading...');
   
   return (
     <Router>
-      <div style={{ 
-        color: '#FE02A1', 
-        background: '#0A0A0A', 
-        minHeight: '100vh',
-        fontFamily: 'Arial, sans-serif',
-        fontSize: '18px'
-      }}>
+      <div className="min-h-screen bg-black text-white">
         <Header />
         
-        <div style={{ paddingTop: '80px' }}>
-          <div style={{ 
-            padding: '40px', 
-            color: '#FE02A1'
-          }}>
-            <h1 style={{ color: '#FE02A1', marginBottom: '20px' }}>
-              🎯 VLTRN PLATFORM - WORKING VERSION
-            </h1>
-            
-            <div style={{ 
-              background: 'rgba(254, 2, 161, 0.1)', 
-              border: '2px solid #FE02A1', 
-              padding: '20px', 
-              borderRadius: '10px',
-              marginBottom: '20px'
-            }}>
-              <h2>✅ SUCCESS!</h2>
-              <p>React is working perfectly!</p>
-              <p>Now adding back components one by one...</p>
-            </div>
-
-            <Routes>
-              <Route path="/" element={<Home />} />
-            </Routes>
-          </div>
-        </div>
+        <main className="pt-16">
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/services" element={<Services />} />
+            <Route path="/contact" element={<Contact />} />
+            <Route path="/community" element={<Community />} />
+            <Route path="/projects" element={<Projects />} />
+            <Route path="/tasks" element={<Tasks />} />
+            <Route path="/resources" element={<Resources />} />
+            <Route path="/client-intakes" element={<ClientIntakePage />} />
+            <Route path="/api-test" element={<APITestPage />} />
+            <Route path="/verification-callback" element={<VerificationCallback />} />
+            <Route 
+              path="/dashboard" 
+              element={
+                <AuthGuard>
+                  <Dashboard />
+                </AuthGuard>
+              } 
+            />
+          </Routes>
+        </main>
       </div>
     </Router>
   );
