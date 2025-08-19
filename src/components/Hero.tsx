@@ -1,19 +1,23 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 const Hero = () => {
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showRegisterModal, setShowRegisterModal] = useState(false);
+  const navigate = useNavigate();
 
   console.log('🚀 Hero component is rendering...');
 
   const handleGetStarted = () => {
     console.log('🎯 Get Started button clicked!');
-    setShowRegisterModal(true);
+    // Navigate to client intake form
+    navigate('/client-intakes');
   };
 
   const handleLearnMore = () => {
     console.log('📚 Learn More button clicked!');
-    alert('Learn More clicked! This would scroll to the services section.');
+    // Navigate to services page
+    navigate('/services');
   };
 
   const handleLogin = () => {
@@ -24,6 +28,10 @@ const Hero = () => {
   const closeModals = () => {
     setShowLoginModal(false);
     setShowRegisterModal(false);
+  };
+
+  const handleRegister = () => {
+    setShowRegisterModal(true);
   };
 
   return (
@@ -90,32 +98,114 @@ const Hero = () => {
         </div>
       </div>
 
-      {/* Modals */}
+      {/* Login Modal */}
       {showLoginModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-gray-900 border border-pink-500/30 rounded-lg p-8 max-w-md w-full mx-4">
-            <h2 className="text-2xl font-bold text-white mb-4">🔐 Login</h2>
-            <p className="text-gray-300 mb-6">Login functionality coming soon!</p>
+            <h2 className="text-2xl font-bold text-white mb-4">🔐 Login to VLTRN</h2>
+            
+            <form className="space-y-4">
+              <div>
+                <label className="block text-white text-sm font-medium mb-2">Email</label>
+                <input 
+                  type="email" 
+                  className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white focus:border-pink-500 focus:outline-none"
+                  placeholder="Enter your email"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-white text-sm font-medium mb-2">Password</label>
+                <input 
+                  type="password" 
+                  className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white focus:border-pink-500 focus:outline-none"
+                  placeholder="Enter your password"
+                />
+              </div>
+              
+              <button 
+                type="submit"
+                className="w-full bg-pink-500 text-white py-2 rounded-lg hover:bg-pink-600 transition-colors font-medium"
+              >
+                Login
+              </button>
+            </form>
+            
+            <div className="mt-4 text-center">
+              <button
+                onClick={handleRegister}
+                className="text-pink-400 hover:text-pink-300 text-sm"
+              >
+                Don't have an account? Register
+              </button>
+            </div>
+            
             <button
               onClick={closeModals}
-              className="w-full bg-pink-500 text-white py-2 rounded-lg hover:bg-pink-600 transition-colors"
+              className="absolute top-4 right-4 text-gray-400 hover:text-white"
             >
-              Close
+              ✕
             </button>
           </div>
         </div>
       )}
 
+      {/* Register Modal */}
       {showRegisterModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-gray-900 border border-purple-500/30 rounded-lg p-8 max-w-md w-full mx-4">
-            <h2 className="text-2xl font-bold text-white mb-4">🚀 Get Started</h2>
-            <p className="text-gray-300 mb-6">Registration functionality coming soon!</p>
+            <h2 className="text-2xl font-bold text-white mb-4">🚀 Join VLTRN</h2>
+            
+            <form className="space-y-4">
+              <div>
+                <label className="block text-white text-sm font-medium mb-2">Full Name</label>
+                <input 
+                  type="text" 
+                  className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white focus:border-purple-500 focus:outline-none"
+                  placeholder="Enter your full name"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-white text-sm font-medium mb-2">Email</label>
+                <input 
+                  type="email" 
+                  className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white focus:border-purple-500 focus:outline-none"
+                  placeholder="Enter your email"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-white text-sm font-medium mb-2">Password</label>
+                <input 
+                  type="password" 
+                  className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white focus:border-purple-500 focus:outline-none"
+                  placeholder="Create a password"
+                />
+              </div>
+              
+              <button 
+                type="submit"
+                className="w-full bg-purple-500 text-white py-2 rounded-lg hover:bg-purple-600 transition-colors font-medium"
+              >
+                Create Account
+              </button>
+            </form>
+            
+            <div className="mt-4 text-center">
+              <button
+                onClick={handleLogin}
+                className="text-purple-400 hover:text-purple-300 text-sm"
+              >
+                Already have an account? Login
+              </button>
+            </div>
+            
             <button
               onClick={closeModals}
-              className="w-full bg-purple-500 text-white py-2 rounded-lg hover:bg-purple-600 transition-colors"
+              className="absolute top-4 right-4 text-gray-400 hover:text-white"
             >
-              Close
+              ✕
             </button>
           </div>
         </div>
