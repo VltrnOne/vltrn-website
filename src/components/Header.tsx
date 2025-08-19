@@ -40,13 +40,28 @@ const Header = () => {
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
           <div className="flex-shrink-0">
-            <Link to="/" className="flex items-center">
-              <div className="w-8 h-8 bg-gradient-to-r from-pink-500 to-purple-600 rounded-lg flex items-center justify-center mr-2">
-                <span className="text-white font-bold text-sm">V</span>
+            <Link to="/" className="flex items-center group">
+              {/* Logo Container */}
+              <div className="relative w-12 h-12 bg-black border-2 border-pink-500 rounded-lg flex items-center justify-center mr-3 group-hover:border-purple-500 transition-all duration-300">
+                {/* VLTRN Text */}
+                <div className="text-center">
+                  <div className="text-pink-500 font-bold text-lg leading-none tracking-tight">VLTRN</div>
+                  {/* AGENCY Text - Rotated */}
+                  <div className="absolute -right-1 top-1/2 transform -translate-y-1/2 rotate-90 origin-left">
+                    <span className="text-blue-400 text-xs font-medium tracking-wider">AGENCY</span>
+                  </div>
+                </div>
+                {/* Decorative Elements */}
+                <div className="absolute top-0 left-0 w-2 h-2 bg-pink-500 rounded-full opacity-60"></div>
+                <div className="absolute bottom-0 right-0 w-2 h-2 bg-purple-500 rounded-full opacity-60"></div>
               </div>
-              <span className="text-xl font-bold bg-gradient-to-r from-pink-500 to-purple-600 bg-clip-text text-transparent">
-                VLTRN
-              </span>
+              
+              {/* Optional: Text Logo */}
+              <div className="hidden sm:block">
+                <span className="text-xl font-bold bg-gradient-to-r from-pink-500 to-purple-600 bg-clip-text text-transparent">
+                  VLTRN
+                </span>
+              </div>
             </Link>
           </div>
 
