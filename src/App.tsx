@@ -42,111 +42,10 @@ const Preloader: React.FC<{ onComplete: () => void }> = ({ onComplete }) => {
   );
 };
 
-// Orbital Element Component
-const OrbitalElement: React.FC<{
-  id: string;
-  type: 'technology' | 'partner' | 'capability' | 'star';
-  title: string;
-  description: string;
-  orbitRadius: number;
-  orbitSpeed: number;
-  orbitOffset: number;
-  size: number;
-  color: string;
-  onElementClick: (element: any) => void;
-  isHovered: boolean;
-  onHover: (id: string, isHovered: boolean) => void;
-  scrollProgress: number;
-}> = ({ id, type, title, description, orbitRadius, orbitSpeed, orbitOffset, size, color, onElementClick, isHovered, onHover, scrollProgress }) => {
-  const [isAnimating, setIsAnimating] = useState(false);
-  const [currentAngle, setCurrentAngle] = useState(orbitOffset);
-
-  // Calculate orbital position based on scroll and time
-  useEffect(() => {
-    const angle = orbitOffset + (scrollProgress * orbitSpeed) + (Date.now() * 0.0001 * orbitSpeed);
-    setCurrentAngle(angle);
-  }, [scrollProgress, orbitSpeed, orbitOffset]);
-
-  const getElementIcon = () => {
-    switch (type) {
-      case 'technology':
-        return 'T';
-      case 'partner':
-        return 'P';
-      case 'capability':
-        return 'C';
-      case 'star':
-        return '★';
-      default:
-        return '•';
-    }
-  };
-
-  const getElementSize = () => {
-    return `w-${size} h-${size}`;
-  };
-
-  const handleClick = () => {
-    setIsAnimating(true);
-    setTimeout(() => {
-      onElementClick({ id, type, title, description });
-      setIsAnimating(false);
-    }, 500);
-  };
-
-  // Calculate position on orbit
-  const x = Math.cos(currentAngle) * orbitRadius;
-  const y = Math.sin(currentAngle) * orbitRadius;
-
-  return (
-    <div
-      className={`absolute ${getElementSize()} cursor-pointer transition-all duration-1000 ease-out ${
-        isHovered ? 'scale-150 z-50' : 'scale-100'
-      } ${isAnimating ? 'animate-pulse' : ''}`}
-      style={{
-        left: `calc(50% + ${x}px)`,
-        top: `calc(50% + ${y}px)`,
-        transform: `translate(-50%, -50%)`,
-      }}
-      onMouseEnter={() => onHover(id, true)}
-      onMouseLeave={() => onHover(id, false)}
-      onClick={handleClick}
-    >
-      {/* Element Background */}
-      <div 
-        className={`w-full h-full rounded-full flex items-center justify-center text-2xl font-bold transition-all duration-700 ${
-          isHovered 
-            ? 'bg-gradient-to-br from-pink-500 to-purple-600 shadow-2xl shadow-pink-500/50 ring-4 ring-pink-300/50' 
-            : `bg-gradient-to-br ${color} shadow-lg ring-2 ring-white/20`
-        }`}
-      >
-        {getElementIcon()}
-      </div>
-
-      {/* Orbital Trail */}
-      <div 
-        className="absolute inset-0 rounded-full border border-white/10 animate-ping"
-        style={{ animationDuration: `${orbitSpeed * 1000}ms` }}
-      />
-
-      {/* Immersive Info Panel */}
-      {isHovered && (
-        <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-6 bg-black/95 backdrop-blur-xl border border-pink-500/30 rounded-2xl p-6 text-white text-center min-w-64 z-50 shadow-2xl shadow-pink-500/20">
-          <h3 className="font-bold text-pink-400 mb-3 text-lg">{title}</h3>
-          <p className="text-sm text-gray-300 leading-relaxed mb-4">{description}</p>
-          <div className="text-xs text-pink-300 font-medium">Click to explore</div>
-          
-          {/* Connection Line */}
-          <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-px h-6 bg-gradient-to-b from-pink-500/50 to-transparent"></div>
-        </div>
-      )}
-    </div>
-  );
-};
-
-// Floating Particles Background
-const FloatingParticles: React.FC = () => {
+// Generative Particle Field with Depth and Parallax
+const GenerativeParticleField: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const mouseRef = useRef({ x: 0, y: 0 });
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -158,7 +57,7 @@ const FloatingParticles: React.FC = () => {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
 
-    // Create sophisticated particle system
+    // Create sophisticated particle system with depth layers
     const particles: Array<{ 
       x: number; 
       y: number; 
@@ -167,43 +66,66 @@ const FloatingParticles: React.FC = () => {
       opacity: number;
       direction: number;
       life: number;
+      depth: number; // 0 = far, 1 = near
+      parallax: number;
     }> = [];
     
-    for (let i = 0; i < 150; i++) {
+    for (let i = 0; i < 300; i++) {
       particles.push({
         x: Math.random() * canvas.width,
         y: Math.random() * canvas.height,
-        size: Math.random() * 3 + 1,
-        speed: Math.random() * 0.3 + 0.1,
-        opacity: Math.random() * 0.5 + 0.1,
+        size: Math.random() * 4 + 1,
+        speed: Math.random() * 0.2 + 0.05,
+        opacity: Math.random() * 0.3 + 0.1,
         direction: Math.random() * Math.PI * 2,
-        life: Math.random() * 100
+        life: Math.random() * 100,
+        depth: Math.random(),
+        parallax: Math.random() * 0.5 + 0.5
       });
     }
 
+    // Mouse movement handler for parallax effect
+    const handleMouseMove = (e: MouseEvent) => {
+      mouseRef.current.x = e.clientX;
+      mouseRef.current.y = e.clientY;
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+
     // Animation loop
     const animate = () => {
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.03)';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
       particles.forEach(particle => {
         ctx.save();
-        ctx.globalAlpha = particle.opacity;
-        ctx.fillStyle = '#ffffff';
+        
+        // Apply parallax effect based on mouse position
+        const parallaxX = (mouseRef.current.x - canvas.width / 2) * particle.parallax * 0.01;
+        const parallaxY = (mouseRef.current.y - canvas.height / 2) * particle.parallax * 0.01;
+        
+        ctx.globalAlpha = particle.opacity * (0.5 + particle.depth * 0.5);
+        ctx.fillStyle = `hsl(${200 + particle.depth * 60}, 70%, ${70 + particle.depth * 30}%)`;
         
         // Create subtle glow effect
-        ctx.shadowColor = '#ffffff';
-        ctx.shadowBlur = particle.size * 2;
+        ctx.shadowColor = ctx.fillStyle;
+        ctx.shadowBlur = particle.size * (1 + particle.depth);
         
         ctx.beginPath();
-        ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
+        ctx.arc(
+          particle.x + parallaxX, 
+          particle.y + parallaxY, 
+          particle.size * (0.5 + particle.depth * 0.5), 
+          0, 
+          Math.PI * 2
+        );
         ctx.fill();
         
         ctx.restore();
 
-        // Update particle position
-        particle.x += Math.cos(particle.direction) * particle.speed;
-        particle.y += Math.sin(particle.direction) * particle.speed;
+        // Update particle position with depth-based movement
+        particle.x += Math.cos(particle.direction) * particle.speed * (1 + particle.depth);
+        particle.y += Math.sin(particle.direction) * particle.speed * (1 + particle.depth);
         particle.life += 0.1;
 
         // Wrap around edges
@@ -212,8 +134,8 @@ const FloatingParticles: React.FC = () => {
         if (particle.y < 0) particle.y = canvas.height;
         if (particle.y > canvas.height) particle.y = 0;
 
-        // Subtle movement variation
-        particle.direction += Math.sin(particle.life * 0.01) * 0.01;
+        // Subtle movement variation based on depth
+        particle.direction += Math.sin(particle.life * 0.01) * 0.01 * (1 + particle.depth);
       });
 
       requestAnimationFrame(animate);
@@ -228,7 +150,10 @@ const FloatingParticles: React.FC = () => {
     };
 
     window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('resize', handleResize);
+    };
   }, []);
 
   return (
@@ -237,6 +162,273 @@ const FloatingParticles: React.FC = () => {
       className="absolute inset-0 w-full h-full"
       style={{ zIndex: -1 }}
     />
+  );
+};
+
+// Unique 3D Object Generator
+const generateUnique3DObject = (type: string, scene: THREE.Scene, position: THREE.Vector3) => {
+  let geometry: THREE.BufferGeometry;
+  let material: THREE.Material;
+
+  switch (type) {
+    case 'ai-platform':
+      // Neural network lattice structure
+      geometry = new THREE.IcosahedronGeometry(1, 2);
+      material = new THREE.MeshStandardMaterial({
+        color: 0x4f46e5,
+        metalness: 0.8,
+        roughness: 0.2,
+        emissive: 0x1e1b4b,
+        emissiveIntensity: 0.1
+      });
+      break;
+      
+    case 'oracle-partnership':
+      // Enterprise cloud structure
+      geometry = new THREE.OctahedronGeometry(1.2, 1);
+      material = new THREE.MeshStandardMaterial({
+        color: 0xea580c,
+        metalness: 0.9,
+        roughness: 0.1,
+        emissive: 0x451a03,
+        emissiveIntensity: 0.15
+      });
+      break;
+      
+    case 'web-development':
+      // Code structure
+      geometry = new THREE.BoxGeometry(1.5, 1, 1.5);
+      material = new THREE.MeshStandardMaterial({
+        color: 0x16a34a,
+        metalness: 0.7,
+        roughness: 0.3,
+        emissive: 0x052e16,
+        emissiveIntensity: 0.1
+      });
+      break;
+      
+    case 'docker-infrastructure':
+      // Container structure
+      geometry = new THREE.CylinderGeometry(0.8, 0.8, 1.5, 8);
+      material = new THREE.MeshStandardMaterial({
+        color: 0x2563eb,
+        metalness: 0.8,
+        roughness: 0.2,
+        emissive: 0x1e3a8a,
+        emissiveIntensity: 0.1
+      });
+      break;
+      
+    case 'github-collaboration':
+      // Collaborative network
+      geometry = new THREE.TorusGeometry(1, 0.3, 8, 16);
+      material = new THREE.MeshStandardMaterial({
+        color: 0x6b7280,
+        metalness: 0.6,
+        roughness: 0.4,
+        emissive: 0x374151,
+        emissiveIntensity: 0.05
+      });
+      break;
+      
+    case 'creative-consulting':
+      // Creative flow structure
+      geometry = new THREE.DodecahedronGeometry(1.1, 0);
+      material = new THREE.MeshStandardMaterial({
+        color: 0xa855f7,
+        metalness: 0.7,
+        roughness: 0.3,
+        emissive: 0x581c87,
+        emissiveIntensity: 0.12
+      });
+      break;
+      
+    case 'aapanel-hosting':
+      // Server structure
+      geometry = new THREE.BoxGeometry(1.2, 1.8, 1.2);
+      material = new THREE.MeshStandardMaterial({
+        color: 0xeab308,
+        metalness: 0.8,
+        roughness: 0.2,
+        emissive: 0x713f12,
+        emissiveIntensity: 0.1
+      });
+      break;
+      
+    case 'future-stars':
+      // Future technology
+      geometry = new THREE.SphereGeometry(1, 12, 8);
+      material = new THREE.MeshStandardMaterial({
+        color: 0xec4899,
+        metalness: 0.9,
+        roughness: 0.1,
+        emissive: 0x831843,
+        emissiveIntensity: 0.2
+      });
+      break;
+      
+    default:
+      geometry = new THREE.SphereGeometry(1, 8, 6);
+      material = new THREE.MeshStandardMaterial({
+        color: 0x6b7280,
+        metalness: 0.5,
+        roughness: 0.5
+      });
+  }
+
+  const mesh = new THREE.Mesh(geometry, material);
+  mesh.position.copy(position);
+  
+  // Add subtle animation
+  mesh.userData = { 
+    rotationSpeed: Math.random() * 0.02 + 0.01,
+    floatSpeed: Math.random() * 0.01 + 0.005,
+    floatOffset: Math.random() * Math.PI * 2
+  };
+  
+  scene.add(mesh);
+  return mesh;
+};
+
+// 3D Orbital Element Component
+const Orbital3DElement: React.FC<{
+  id: string;
+  type: string;
+  title: string;
+  description: string;
+  orbitRadius: number;
+  orbitSpeed: number;
+  orbitOffset: number;
+  onElementClick: (element: any) => void;
+  isHovered: boolean;
+  onHover: (id: string, isHovered: boolean) => void;
+  scrollProgress: number;
+}> = ({ id, type, title, description, orbitRadius, orbitSpeed, orbitOffset, onElementClick, isHovered, onHover, scrollProgress }) => {
+  const mountRef = useRef<HTMLDivElement>(null);
+  const sceneRef = useRef<THREE.Scene>();
+  const rendererRef = useRef<THREE.WebGLRenderer>();
+  const meshRef = useRef<THREE.Mesh>();
+  const [isAnimating, setIsAnimating] = useState(false);
+
+  useEffect(() => {
+    if (!mountRef.current) return;
+
+    // Scene setup
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(75, 200 / 200, 0.1, 1000);
+    const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+    
+    renderer.setSize(200, 200);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    mountRef.current.appendChild(renderer.domElement);
+
+    // Dynamic lighting
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.3);
+    scene.add(ambientLight);
+
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+    directionalLight.position.set(5, 5, 5);
+    directionalLight.castShadow = true;
+    scene.add(directionalLight);
+
+    const pointLight = new THREE.PointLight(0xffffff, 0.5, 100);
+    pointLight.position.set(-5, 5, 5);
+    scene.add(pointLight);
+
+    // Add subtle rim lighting
+    const rimLight = new THREE.DirectionalLight(0x4f46e5, 0.3);
+    rimLight.position.set(-5, -5, -5);
+    scene.add(rimLight);
+
+    camera.position.z = 5;
+
+    // Generate unique 3D object
+    const mesh = generateUnique3DObject(type, scene, new THREE.Vector3(0, 0, 0));
+    meshRef.current = mesh;
+
+    // Animation loop
+    const animate = () => {
+      requestAnimationFrame(animate);
+
+      if (meshRef.current) {
+        // Rotate the object
+        meshRef.current.rotation.x += meshRef.current.userData.rotationSpeed;
+        meshRef.current.rotation.y += meshRef.current.userData.rotationSpeed * 0.7;
+
+        // Subtle floating animation
+        meshRef.current.position.y = Math.sin(Date.now() * meshRef.current.userData.floatSpeed + meshRef.current.userData.floatOffset) * 0.2;
+
+        // Hover effects
+        if (isHovered) {
+          meshRef.current.scale.setScalar(1.2);
+          meshRef.current.material.emissiveIntensity = 0.3;
+        } else {
+          meshRef.current.scale.setScalar(1.0);
+          meshRef.current.material.emissiveIntensity = 0.1;
+        }
+      }
+
+      renderer.render(scene, camera);
+    };
+
+    animate();
+
+    // Store references
+    sceneRef.current = scene;
+    rendererRef.current = renderer;
+
+    return () => {
+      if (mountRef.current && renderer.domElement) {
+        mountRef.current.removeChild(renderer.domElement);
+      }
+      renderer.dispose();
+    };
+  }, [type, isHovered]);
+
+  // Calculate orbital position
+  const angle = orbitOffset + (scrollProgress * orbitSpeed) + (Date.now() * 0.0001 * orbitSpeed);
+  const x = Math.cos(angle) * orbitRadius;
+  const y = Math.sin(angle) * orbitRadius;
+
+  const handleClick = () => {
+    setIsAnimating(true);
+    setTimeout(() => {
+      onElementClick({ id, type, title, description });
+      setIsAnimating(false);
+    }, 500);
+  };
+
+  return (
+    <div
+      className={`absolute cursor-pointer transition-all duration-1000 ease-out ${
+        isHovered ? 'scale-110 z-50' : 'scale-100'
+      } ${isAnimating ? 'animate-pulse' : ''}`}
+      style={{
+        left: `calc(50% + ${x}px)`,
+        top: `calc(50% + ${y}px)`,
+        transform: 'translate(-50%, -50%)',
+        width: '200px',
+        height: '200px'
+      }}
+      onMouseEnter={() => onHover(id, true)}
+      onMouseLeave={() => onHover(id, false)}
+      onClick={handleClick}
+    >
+      {/* 3D Object Container */}
+      <div ref={mountRef} className="w-full h-full" />
+      
+      {/* Elegant Info Display (No Hard Edges) */}
+      {isHovered && (
+        <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-8 text-center z-50">
+          <h3 className="text-white font-light text-lg mb-2 tracking-wide">{title}</h3>
+          <p className="text-gray-300 text-sm leading-relaxed max-w-48 opacity-0 animate-fade-in">
+            {description}
+          </p>
+        </div>
+      )}
+    </div>
   );
 };
 
@@ -265,91 +457,75 @@ const OrbitalUniverse: React.FC<{ onElementClick: (element: any) => void }> = ({
   const universeElements = [
     {
       id: 'ai-platform',
-      type: 'technology' as const,
+      type: 'ai-platform',
       title: 'AI Integration Platform',
       description: 'Cutting-edge artificial intelligence solutions for business automation and insights',
       orbitRadius: 200,
       orbitSpeed: 0.5,
-      orbitOffset: 0,
-      size: 16,
-      color: 'from-blue-500 to-cyan-500'
+      orbitOffset: 0
     },
     {
       id: 'oracle-partnership',
-      type: 'partner' as const,
+      type: 'oracle-partnership',
       title: 'Oracle Partnership',
       description: 'Strategic partnership with Oracle for enterprise-grade cloud solutions',
       orbitRadius: 280,
       orbitSpeed: 0.3,
-      orbitOffset: Math.PI / 3,
-      size: 20,
-      color: 'from-orange-500 to-red-500'
+      orbitOffset: Math.PI / 3
     },
     {
       id: 'web-development',
-      type: 'capability' as const,
+      type: 'web-development',
       title: 'Web Development',
       description: 'Modern, responsive web applications built with cutting-edge technologies',
       orbitRadius: 350,
       orbitSpeed: 0.4,
-      orbitOffset: Math.PI / 2,
-      size: 14,
-      color: 'from-green-500 to-emerald-500'
+      orbitOffset: Math.PI / 2
     },
     {
       id: 'docker-infrastructure',
-      type: 'technology' as const,
+      type: 'docker-infrastructure',
       title: 'Docker Infrastructure',
       description: 'Containerized deployment solutions for scalable applications',
       orbitRadius: 420,
       orbitSpeed: 0.6,
-      orbitOffset: Math.PI,
-      size: 16,
-      color: 'from-blue-600 to-indigo-600'
+      orbitOffset: Math.PI
     },
     {
       id: 'github-collaboration',
-      type: 'partner' as const,
+      type: 'github-collaboration',
       title: 'GitHub Collaboration',
       description: 'Open-source development and collaborative coding solutions',
       orbitRadius: 320,
       orbitSpeed: 0.35,
-      orbitOffset: Math.PI * 1.5,
-      size: 20,
-      color: 'from-gray-600 to-gray-800'
+      orbitOffset: Math.PI * 1.5
     },
     {
       id: 'creative-consulting',
-      type: 'capability' as const,
+      type: 'creative-consulting',
       title: 'Creative Consulting',
       description: 'Strategic creative direction and brand development services',
       orbitRadius: 380,
       orbitSpeed: 0.45,
-      orbitOffset: Math.PI * 1.8,
-      size: 14,
-      color: 'from-purple-500 to-pink-500'
+      orbitOffset: Math.PI * 1.8
     },
     {
       id: 'aapanel-hosting',
-      type: 'technology' as const,
+      type: 'aapanel-hosting',
       title: 'AApanel Hosting',
       description: 'Professional hosting solutions with advanced panel management',
       orbitRadius: 250,
       orbitSpeed: 0.55,
-      orbitOffset: Math.PI * 2.2,
-      size: 16,
-      color: 'from-yellow-500 to-orange-500'
+      orbitOffset: Math.PI * 2.2
     },
     {
       id: 'future-stars',
-      type: 'star' as const,
+      type: 'future-stars',
       title: 'Future Stars',
       description: 'Emerging technologies and innovative solutions on the horizon',
       orbitRadius: 450,
       orbitSpeed: 0.25,
-      orbitOffset: Math.PI * 2.8,
-      size: 12,
-      color: 'from-pink-400 to-purple-500'
+      orbitOffset: Math.PI * 2.8
     }
   ];
 
@@ -359,18 +535,18 @@ const OrbitalUniverse: React.FC<{ onElementClick: (element: any) => void }> = ({
 
   return (
     <div ref={containerRef} className="relative w-full h-screen overflow-hidden bg-black">
-      {/* Floating Particles Background */}
-      <FloatingParticles />
+      {/* Generative Particle Field Background */}
+      <GenerativeParticleField />
       
       {/* VLTRN Logo in Center */}
       <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center z-10">
         <div className="text-6xl font-bold text-white mb-4 tracking-wider">VLTRN</div>
-        <div className="text-xl text-pink-400 font-light">Scroll to navigate the universe</div>
+        <div className="text-xl text-gray-400 font-light">Explore the universe</div>
       </div>
 
-      {/* Orbital Elements */}
+      {/* 3D Orbital Elements */}
       {universeElements.map((element) => (
-        <OrbitalElement
+        <Orbital3DElement
           key={element.id}
           {...element}
           isHovered={hoveredElement === element.id}
@@ -379,14 +555,6 @@ const OrbitalUniverse: React.FC<{ onElementClick: (element: any) => void }> = ({
           scrollProgress={scrollProgress}
         />
       ))}
-
-      {/* Navigation Instructions */}
-      <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 text-center text-white z-10">
-        <p className="text-sm mb-2">Scroll to navigate • Hover to learn • Click to explore</p>
-        <div className="w-6 h-10 border border-white/30 rounded-full mx-auto">
-          <div className="w-1 h-3 bg-white/50 rounded-full mx-auto mt-2 animate-bounce"></div>
-        </div>
-      </div>
     </div>
   );
 };
@@ -538,91 +706,75 @@ function App() {
 const universeElements = [
   {
     id: 'ai-platform',
-    type: 'technology' as const,
+    type: 'ai-platform',
     title: 'AI Integration Platform',
     description: 'Cutting-edge artificial intelligence solutions for business automation and insights',
     orbitRadius: 200,
     orbitSpeed: 0.5,
-    orbitOffset: 0,
-    size: 16,
-    color: 'from-blue-500 to-cyan-500'
+    orbitOffset: 0
   },
   {
     id: 'oracle-partnership',
-    type: 'partner' as const,
+    type: 'oracle-partnership',
     title: 'Oracle Partnership',
     description: 'Strategic partnership with Oracle for enterprise-grade cloud solutions',
     orbitRadius: 280,
     orbitSpeed: 0.3,
-    orbitOffset: Math.PI / 3,
-    size: 20,
-    color: 'from-orange-500 to-red-500'
+    orbitOffset: Math.PI / 3
   },
   {
     id: 'web-development',
-    type: 'capability' as const,
+    type: 'web-development',
     title: 'Web Development',
     description: 'Modern, responsive web applications built with cutting-edge technologies',
     orbitRadius: 350,
     orbitSpeed: 0.4,
-    orbitOffset: Math.PI / 2,
-    size: 14,
-    color: 'from-green-500 to-emerald-500'
+    orbitOffset: Math.PI / 2
   },
   {
     id: 'docker-infrastructure',
-    type: 'technology' as const,
+    type: 'docker-infrastructure',
     title: 'Docker Infrastructure',
     description: 'Containerized deployment solutions for scalable applications',
     orbitRadius: 420,
     orbitSpeed: 0.6,
-    orbitOffset: Math.PI,
-    size: 16,
-    color: 'from-blue-600 to-indigo-600'
+    orbitOffset: Math.PI
   },
   {
     id: 'github-collaboration',
-    type: 'partner' as const,
+    type: 'github-collaboration',
     title: 'GitHub Collaboration',
     description: 'Open-source development and collaborative coding solutions',
     orbitRadius: 320,
     orbitSpeed: 0.35,
-    orbitOffset: Math.PI * 1.5,
-    size: 20,
-    color: 'from-gray-600 to-gray-800'
+    orbitOffset: Math.PI * 1.5
   },
   {
     id: 'creative-consulting',
-    type: 'capability' as const,
+    type: 'creative-consulting',
     title: 'Creative Consulting',
     description: 'Strategic creative direction and brand development services',
     orbitRadius: 380,
     orbitSpeed: 0.45,
-    orbitOffset: Math.PI * 1.8,
-    size: 14,
-    color: 'from-purple-500 to-pink-500'
+    orbitOffset: Math.PI * 1.8
   },
   {
     id: 'aapanel-hosting',
-    type: 'technology' as const,
+    type: 'aapanel-hosting',
     title: 'AApanel Hosting',
     description: 'Professional hosting solutions with advanced panel management',
     orbitRadius: 250,
     orbitSpeed: 0.55,
-    orbitOffset: Math.PI * 2.2,
-    size: 16,
-    color: 'from-yellow-500 to-orange-500'
+    orbitOffset: Math.PI * 2.2
   },
   {
     id: 'future-stars',
-    type: 'star' as const,
+    type: 'future-stars',
     title: 'Future Stars',
     description: 'Emerging technologies and innovative solutions on the horizon',
     orbitRadius: 450,
     orbitSpeed: 0.25,
-    orbitOffset: Math.PI * 2.8,
-    size: 12,
-    color: 'from-pink-400 to-purple-500'
+    orbitOffset: Math.PI * 2.8
   }
 ];
 
