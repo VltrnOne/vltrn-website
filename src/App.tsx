@@ -123,7 +123,7 @@ const SubtleParticleBackground: React.FC = () => {
 };
 
 // Main Landing Page
-const LandingPage: React.FC = () => {
+const LandingPage: React.FC<{ onEnter: () => void }> = ({ onEnter }) => {
   const [showContent, setShowContent] = useState(false);
 
   useEffect(() => {
@@ -139,20 +139,21 @@ const LandingPage: React.FC = () => {
       {/* Main Content */}
       <div className={`text-center transition-all duration-1000 ${showContent ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}>
         {/* Scroll Instruction */}
-        <div className="mb-16">
-          <p className="text-lg text-gray-400 mb-4">Scroll to explore</p>
+        <div className="mb-8 md:mb-16">
+          <p className="text-base md:text-lg text-gray-400 mb-4">Scroll to explore</p>
           <div className="w-6 h-10 border border-gray-400 rounded-full mx-auto">
             <div className="w-1 h-3 bg-gray-400 rounded-full mx-auto mt-2 animate-bounce"></div>
           </div>
         </div>
 
         {/* Main Title */}
-        <h1 className="text-8xl font-bold mb-6 tracking-wider">VLTRN</h1>
-        <h2 className="text-3xl text-gray-300 mb-12 font-light tracking-wide">THE GLOBAL SOLUTION ENGINE</h2>
+        <h1 className="text-6xl md:text-8xl font-bold mb-6 tracking-wider">VLTRN</h1>
+        <h2 className="text-xl md:text-3xl text-gray-300 mb-8 md:mb-12 font-light tracking-wide">THE GLOBAL SOLUTION ENGINE</h2>
 
         {/* Enter Button */}
         <button
-          className="px-12 py-4 border-2 border-white text-white hover:bg-white hover:text-black transition-all duration-500 text-xl font-medium tracking-wide"
+          onClick={onEnter}
+          className="px-8 md:px-12 py-3 md:py-4 border-2 border-white text-white hover:bg-white hover:text-black transition-all duration-500 text-lg md:text-xl font-medium tracking-wide"
         >
           Enter
         </button>
@@ -332,7 +333,7 @@ function App() {
       {showPreloader ? (
         <Preloader onComplete={handlePreloaderComplete} />
       ) : showLanding ? (
-        <LandingPage />
+        <LandingPage onEnter={handleEnter} />
       ) : showMain ? (
         <MainExperience />
       ) : (
