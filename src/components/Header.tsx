@@ -1,292 +1,152 @@
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 
-const Header = () => {
+const Header: React.FC = () => {
+  const [isScrolled, setIsScrolled] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [showLoginModal, setShowLoginModal] = useState(false);
-  const [showRegisterModal, setShowRegisterModal] = useState(false);
-  const navigate = useNavigate();
 
-  console.log('🚀 Header component is rendering...');
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 50);
+    };
 
-  const toggleMenu = () => {
-    setIsMenuOpen(!isMenuOpen);
-  };
-
-  const handleLogin = () => {
-    console.log('🔐 Login button clicked!');
-    setShowLoginModal(true);
-  };
-
-  const handleRegister = () => {
-    console.log('🚀 Register button clicked!');
-    setShowRegisterModal(true);
-  };
-
-  const closeModals = () => {
-    setShowLoginModal(false);
-    setShowRegisterModal(false);
-  };
-
-  const handleLogout = () => {
-    setIsLoggedIn(false);
-    navigate('/');
-  };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   return (
-    <header className="bg-black text-white shadow-lg fixed w-full top-0 z-50">
+    <header 
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
+        isScrolled 
+          ? 'bg-black/80 backdrop-blur-md border-b border-white/10' 
+          : 'bg-transparent'
+      }`}
+    >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
+        <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <div className="flex-shrink-0">
-            <Link to="/" className="flex items-center group">
-              {/* Logo Container */}
-              <div className="relative w-12 h-12 bg-black border-2 border-pink-500 rounded-lg flex items-center justify-center mr-3 group-hover:border-purple-500 transition-all duration-300">
-                {/* VLTRN Text */}
-                <div className="text-center">
-                  <div className="text-pink-500 font-bold text-lg leading-none tracking-tight">VLTRN</div>
-                  {/* AGENCY Text - Rotated */}
-                  <div className="absolute -right-1 top-1/2 transform -translate-y-1/2 rotate-90 origin-left">
-                    <span className="text-blue-400 text-xs font-medium tracking-wider">AGENCY</span>
-                  </div>
-                </div>
-                {/* Decorative Elements */}
-                <div className="absolute top-0 left-0 w-2 h-2 bg-pink-500 rounded-full opacity-60"></div>
-                <div className="absolute bottom-0 right-0 w-2 h-2 bg-purple-500 rounded-full opacity-60"></div>
-              </div>
-              
-              {/* Optional: Text Logo */}
-              <div className="hidden sm:block">
-                <span className="text-xl font-bold bg-gradient-to-r from-pink-500 to-purple-600 bg-clip-text text-transparent">
-                  VLTRN
-                </span>
-              </div>
-            </Link>
-          </div>
+          <Link to="/" className="flex items-center space-x-2">
+            <div className="relative">
+              <span className="text-2xl font-bold text-white">VLTRN</span>
+              <span className="absolute -top-1 -right-8 text-xs font-light text-blue-400 transform rotate-12">
+                AGENCY
+              </span>
+            </div>
+          </Link>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex space-x-8">
-            <Link to="/" className="text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors">
+          <nav className="hidden md:flex items-center space-x-8">
+            <Link 
+              to="/" 
+              className="text-gray-300 hover:text-white transition-colors duration-300 text-sm font-medium"
+            >
               Home
             </Link>
-            <Link to="/about" className="text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors">
-              About
-            </Link>
-            <Link to="/services" className="text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors">
+            <Link 
+              to="/services" 
+              className="text-gray-300 hover:text-white transition-colors duration-300 text-sm font-medium"
+            >
               Services
             </Link>
-            <Link to="/contact" className="text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors">
+            <Link 
+              to="/projects" 
+              className="text-gray-300 hover:text-white transition-colors duration-300 text-sm font-medium"
+            >
+              Projects
+            </Link>
+            <Link 
+              to="/contact" 
+              className="text-gray-300 hover:text-white transition-colors duration-300 text-sm font-medium"
+            >
               Contact
             </Link>
           </nav>
 
-          {/* Auth Buttons */}
-          <div className="hidden md:flex items-center space-x-4">
-            {!isLoggedIn ? (
-              <>
-                <button
-                  onClick={handleLogin}
-                  className="text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors"
-                >
-                  Login
-                </button>
-                <button
-                  onClick={handleRegister}
-                  className="bg-gradient-to-r from-pink-500 to-purple-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:from-pink-600 hover:to-purple-700 transition-all"
-                >
-                  Get Started
-                </button>
-              </>
-            ) : (
-              <button
-                onClick={handleLogout}
-                className="text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors"
-              >
-                Logout
-              </button>
-            )}
+          {/* CTA Button */}
+          <div className="hidden md:block">
+            <Link
+              to="/client-intakes"
+              className="px-6 py-2 border border-white text-white hover:bg-white hover:text-black transition-all duration-300 text-sm font-medium"
+            >
+              Start Project
+            </Link>
           </div>
 
-          {/* Mobile menu button */}
-          <div className="md:hidden">
-            <button
-              onClick={toggleMenu}
-              className="text-gray-400 hover:text-white focus:outline-none focus:text-white"
+          {/* Mobile Menu Button */}
+          <button
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+            className="md:hidden p-2 text-white hover:text-gray-300 transition-colors duration-300"
+          >
+            <svg
+              className="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
             >
-              <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                {isMenuOpen ? (
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                ) : (
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                )}
-              </svg>
-            </button>
-          </div>
+              {isMenuOpen ? (
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              ) : (
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 6h16M4 12h16M4 18h16"
+                />
+              )}
+            </svg>
+          </button>
         </div>
 
-        {/* Mobile Navigation */}
+        {/* Mobile Menu */}
         {isMenuOpen && (
-          <div className="md:hidden">
-            <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 bg-gray-900">
-              <Link to="/" className="text-gray-300 hover:text-white block px-3 py-2 rounded-md text-base font-medium">
+          <div className="md:hidden bg-black/95 backdrop-blur-md border-t border-white/10">
+            <div className="px-4 py-6 space-y-4">
+              <Link 
+                to="/" 
+                className="block text-gray-300 hover:text-white transition-colors duration-300 text-base font-medium"
+                onClick={() => setIsMenuOpen(false)}
+              >
                 Home
               </Link>
-              <Link to="/about" className="text-gray-300 hover:text-white block px-3 py-2 rounded-md text-base font-medium">
-                About
-              </Link>
-              <Link to="/services" className="text-gray-300 hover:text-white block px-3 py-2 rounded-md text-base font-medium">
+              <Link 
+                to="/services" 
+                className="block text-gray-300 hover:text-white transition-colors duration-300 text-base font-medium"
+                onClick={() => setIsMenuOpen(false)}
+              >
                 Services
               </Link>
-              <Link to="/contact" className="text-gray-300 hover:text-white block px-3 py-2 rounded-md text-base font-medium">
+              <Link 
+                to="/projects" 
+                className="block text-gray-300 hover:text-white transition-colors duration-300 text-base font-medium"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Projects
+              </Link>
+              <Link 
+                to="/contact" 
+                className="block text-gray-300 hover:text-white transition-colors duration-300 text-base font-medium"
+                onClick={() => setIsMenuOpen(false)}
+              >
                 Contact
               </Link>
-              {!isLoggedIn ? (
-                <>
-                  <button
-                    onClick={handleLogin}
-                    className="text-gray-300 hover:text-white block w-full text-left px-3 py-2 rounded-md text-base font-medium"
-                  >
-                    Login
-                  </button>
-                  <button
-                    onClick={handleRegister}
-                    className="bg-gradient-to-r from-pink-500 to-purple-600 text-white block w-full text-left px-3 py-2 rounded-md text-base font-medium"
-                  >
-                    Get Started
-                  </button>
-                </>
-              ) : (
-                <button
-                  onClick={handleLogout}
-                  className="text-gray-300 hover:text-white block w-full text-left px-3 py-2 rounded-md text-base font-medium"
+              <div className="pt-4">
+                <Link
+                  to="/client-intakes"
+                  className="block w-full px-6 py-3 border border-white text-white hover:bg-white hover:text-black transition-all duration-300 text-base font-medium text-center"
+                  onClick={() => setIsMenuOpen(false)}
                 >
-                  Logout
-                </button>
-              )}
+                  Start Project
+                </Link>
+              </div>
             </div>
           </div>
         )}
       </div>
-
-      {/* Login Modal */}
-      {showLoginModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-gray-900 border border-pink-500/30 rounded-lg p-8 max-w-md w-full mx-4">
-            <h2 className="text-2xl font-bold text-white mb-4">🔐 Login to VLTRN</h2>
-            
-            <form className="space-y-4">
-              <div>
-                <label className="block text-white text-sm font-medium mb-2">Email</label>
-                <input 
-                  type="email" 
-                  className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white focus:border-pink-500 focus:outline-none"
-                  placeholder="Enter your email"
-                />
-              </div>
-              
-              <div>
-                <label className="block text-white text-sm font-medium mb-2">Password</label>
-                <input 
-                  type="password" 
-                  className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white focus:border-pink-500 focus:outline-none"
-                  placeholder="Enter your password"
-                />
-              </div>
-              
-              <button 
-                type="submit"
-                className="w-full bg-pink-500 text-white py-2 rounded-lg hover:bg-pink-600 transition-colors font-medium"
-              >
-                Login
-              </button>
-            </form>
-            
-            <div className="mt-4 text-center">
-              <button
-                onClick={() => {
-                  setShowLoginModal(false);
-                  setShowRegisterModal(true);
-                }}
-                className="text-pink-400 hover:text-pink-300 text-sm"
-              >
-                Don't have an account? Register
-              </button>
-            </div>
-            
-            <button
-              onClick={closeModals}
-              className="absolute top-4 right-4 text-gray-400 hover:text-white"
-            >
-              ✕
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Register Modal */}
-      {showRegisterModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-gray-900 border border-purple-500/30 rounded-lg p-8 max-w-md w-full mx-4">
-            <h2 className="text-2xl font-bold text-white mb-4">🚀 Join VLTRN</h2>
-            
-            <form className="space-y-4">
-              <div>
-                <label className="block text-white text-sm font-medium mb-2">Full Name</label>
-                <input 
-                  type="text" 
-                  className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white focus:border-purple-500 focus:outline-none"
-                  placeholder="Enter your full name"
-                />
-              </div>
-              
-              <div>
-                <label className="block text-white text-sm font-medium mb-2">Email</label>
-                <input 
-                  type="email" 
-                  className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white focus:border-purple-500 focus:outline-none"
-                  placeholder="Enter your email"
-                />
-              </div>
-              
-              <div>
-                <label className="block text-white text-sm font-medium mb-2">Password</label>
-                <input 
-                  type="password" 
-                  className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white focus:border-purple-500 focus:outline-none"
-                  placeholder="Create a password"
-                />
-              </div>
-              
-              <button 
-                type="submit"
-                className="w-full bg-purple-500 text-white py-2 rounded-lg hover:bg-purple-600 transition-colors font-medium"
-              >
-                Create Account
-              </button>
-            </form>
-            
-            <div className="mt-4 text-center">
-              <button
-                onClick={() => {
-                  setShowRegisterModal(false);
-                  setShowLoginModal(true);
-                }}
-                className="text-purple-400 hover:text-purple-300 text-sm"
-              >
-                Already have an account? Login
-              </button>
-            </div>
-            
-            <button
-              onClick={closeModals}
-              className="absolute top-4 right-4 text-gray-400 hover:text-white"
-            >
-              ✕
-            </button>
-          </div>
-        </div>
-      )}
     </header>
   );
 };
