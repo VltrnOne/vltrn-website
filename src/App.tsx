@@ -42,48 +42,48 @@ const Preloader: React.FC<{ onComplete: () => void }> = ({ onComplete }) => {
   );
 };
 
-// Floating Universe Element Component
-const FloatingElement: React.FC<{
+// Orbital Element Component
+const OrbitalElement: React.FC<{
   id: string;
   type: 'technology' | 'partner' | 'capability' | 'star';
   title: string;
   description: string;
-  position: { x: number; y: number; z: number };
+  orbitRadius: number;
+  orbitSpeed: number;
+  orbitOffset: number;
+  size: number;
   color: string;
   onElementClick: (element: any) => void;
   isHovered: boolean;
   onHover: (id: string, isHovered: boolean) => void;
-}> = ({ id, type, title, description, position, color, onElementClick, isHovered, onHover }) => {
+  scrollProgress: number;
+}> = ({ id, type, title, description, orbitRadius, orbitSpeed, orbitOffset, size, color, onElementClick, isHovered, onHover, scrollProgress }) => {
   const [isAnimating, setIsAnimating] = useState(false);
+  const [currentAngle, setCurrentAngle] = useState(orbitOffset);
+
+  // Calculate orbital position based on scroll and time
+  useEffect(() => {
+    const angle = orbitOffset + (scrollProgress * orbitSpeed) + (Date.now() * 0.0001 * orbitSpeed);
+    setCurrentAngle(angle);
+  }, [scrollProgress, orbitSpeed, orbitOffset]);
 
   const getElementIcon = () => {
     switch (type) {
       case 'technology':
-        return '⚡';
+        return 'T';
       case 'partner':
-        return '🤝';
+        return 'P';
       case 'capability':
-        return '🚀';
+        return 'C';
       case 'star':
-        return '⭐';
+        return '★';
       default:
-        return '✨';
+        return '•';
     }
   };
 
   const getElementSize = () => {
-    switch (type) {
-      case 'technology':
-        return 'w-16 h-16';
-      case 'partner':
-        return 'w-20 h-20';
-      case 'capability':
-        return 'w-14 h-14';
-      case 'star':
-        return 'w-12 h-12';
-      default:
-        return 'w-16 h-16';
-    }
+    return `w-${size} h-${size}`;
   };
 
   const handleClick = () => {
@@ -94,15 +94,19 @@ const FloatingElement: React.FC<{
     }, 500);
   };
 
+  // Calculate position on orbit
+  const x = Math.cos(currentAngle) * orbitRadius;
+  const y = Math.sin(currentAngle) * orbitRadius;
+
   return (
     <div
-      className={`absolute ${getElementSize()} cursor-pointer transition-all duration-700 ease-out ${
-        isHovered ? 'scale-125 z-50' : 'scale-100'
+      className={`absolute ${getElementSize()} cursor-pointer transition-all duration-1000 ease-out ${
+        isHovered ? 'scale-150 z-50' : 'scale-100'
       } ${isAnimating ? 'animate-pulse' : ''}`}
       style={{
-        left: `${position.x}%`,
-        top: `${position.y}%`,
-        transform: `translate(-50%, -50%) rotate(${position.z}deg)`,
+        left: `calc(50% + ${x}px)`,
+        top: `calc(50% + ${y}px)`,
+        transform: `translate(-50%, -50%)`,
       }}
       onMouseEnter={() => onHover(id, true)}
       onMouseLeave={() => onHover(id, false)}
@@ -110,34 +114,38 @@ const FloatingElement: React.FC<{
     >
       {/* Element Background */}
       <div 
-        className={`w-full h-full rounded-full flex items-center justify-center text-2xl font-bold transition-all duration-500 ${
+        className={`w-full h-full rounded-full flex items-center justify-center text-2xl font-bold transition-all duration-700 ${
           isHovered 
-            ? 'bg-gradient-to-br from-pink-500 to-purple-600 shadow-2xl shadow-pink-500/50' 
-            : `bg-gradient-to-br from-blue-500 to-cyan-500 shadow-lg`
+            ? 'bg-gradient-to-br from-pink-500 to-purple-600 shadow-2xl shadow-pink-500/50 ring-4 ring-pink-300/50' 
+            : `bg-gradient-to-br ${color} shadow-lg ring-2 ring-white/20`
         }`}
       >
         {getElementIcon()}
       </div>
 
-      {/* Info Tag */}
-      {isHovered && (
-        <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-4 bg-black/90 backdrop-blur-md border border-pink-500/50 rounded-lg p-4 text-white text-center min-w-48 z-50">
-          <h3 className="font-bold text-pink-400 mb-2">{title}</h3>
-          <p className="text-sm text-gray-300">{description}</p>
-          <div className="mt-2 text-xs text-pink-300">Click to explore</div>
-        </div>
-      )}
+      {/* Orbital Trail */}
+      <div 
+        className="absolute inset-0 rounded-full border border-white/10 animate-ping"
+        style={{ animationDuration: `${orbitSpeed * 1000}ms` }}
+      />
 
-      {/* Connection Lines */}
+      {/* Immersive Info Panel */}
       {isHovered && (
-        <div className="absolute inset-0 rounded-full border-2 border-pink-500/50 animate-ping"></div>
+        <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-6 bg-black/95 backdrop-blur-xl border border-pink-500/30 rounded-2xl p-6 text-white text-center min-w-64 z-50 shadow-2xl shadow-pink-500/20">
+          <h3 className="font-bold text-pink-400 mb-3 text-lg">{title}</h3>
+          <p className="text-sm text-gray-300 leading-relaxed mb-4">{description}</p>
+          <div className="text-xs text-pink-300 font-medium">Click to explore</div>
+          
+          {/* Connection Line */}
+          <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-px h-6 bg-gradient-to-b from-pink-500/50 to-transparent"></div>
+        </div>
       )}
     </div>
   );
 };
 
-// Floating Universe Background
-const UniverseBackground: React.FC = () => {
+// Floating Particles Background
+const FloatingParticles: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -150,34 +158,62 @@ const UniverseBackground: React.FC = () => {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
 
-    // Create starfield
-    const stars: Array<{ x: number; y: number; size: number; speed: number }> = [];
-    for (let i = 0; i < 200; i++) {
-      stars.push({
+    // Create sophisticated particle system
+    const particles: Array<{ 
+      x: number; 
+      y: number; 
+      size: number; 
+      speed: number; 
+      opacity: number;
+      direction: number;
+      life: number;
+    }> = [];
+    
+    for (let i = 0; i < 150; i++) {
+      particles.push({
         x: Math.random() * canvas.width,
         y: Math.random() * canvas.height,
-        size: Math.random() * 2,
-        speed: Math.random() * 0.5
+        size: Math.random() * 3 + 1,
+        speed: Math.random() * 0.3 + 0.1,
+        opacity: Math.random() * 0.5 + 0.1,
+        direction: Math.random() * Math.PI * 2,
+        life: Math.random() * 100
       });
     }
 
     // Animation loop
     const animate = () => {
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-      ctx.fillStyle = '#ffffff';
-      stars.forEach(star => {
+      particles.forEach(particle => {
+        ctx.save();
+        ctx.globalAlpha = particle.opacity;
+        ctx.fillStyle = '#ffffff';
+        
+        // Create subtle glow effect
+        ctx.shadowColor = '#ffffff';
+        ctx.shadowBlur = particle.size * 2;
+        
         ctx.beginPath();
-        ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
+        ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
         ctx.fill();
+        
+        ctx.restore();
 
-        // Move stars
-        star.y += star.speed;
-        if (star.y > canvas.height) {
-          star.y = 0;
-          star.x = Math.random() * canvas.width;
-        }
+        // Update particle position
+        particle.x += Math.cos(particle.direction) * particle.speed;
+        particle.y += Math.sin(particle.direction) * particle.speed;
+        particle.life += 0.1;
+
+        // Wrap around edges
+        if (particle.x < 0) particle.x = canvas.width;
+        if (particle.x > canvas.width) particle.x = 0;
+        if (particle.y < 0) particle.y = canvas.height;
+        if (particle.y > canvas.height) particle.y = 0;
+
+        // Subtle movement variation
+        particle.direction += Math.sin(particle.life * 0.01) * 0.01;
       });
 
       requestAnimationFrame(animate);
@@ -204,18 +240,38 @@ const UniverseBackground: React.FC = () => {
   );
 };
 
-// Floating Universe Component
-const FloatingUniverse: React.FC<{ onElementClick: (element: any) => void }> = ({ onElementClick }) => {
+// Orbital Universe Component
+const OrbitalUniverse: React.FC<{ onElementClick: (element: any) => void }> = ({ onElementClick }) => {
   const [hoveredElement, setHoveredElement] = useState<string | null>(null);
+  const [scrollProgress, setScrollProgress] = useState(0);
+  const containerRef = useRef<HTMLDivElement>(null);
 
-  // Universe elements data
+  // Handle scroll for orbital movement
+  useEffect(() => {
+    const handleScroll = () => {
+      if (containerRef.current) {
+        const scrollTop = window.pageYOffset;
+        const docHeight = document.body.scrollHeight - window.innerHeight;
+        const scrollPercent = scrollTop / docHeight;
+        setScrollProgress(scrollPercent);
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // Universe elements with orbital parameters
   const universeElements = [
     {
       id: 'ai-platform',
       type: 'technology' as const,
       title: 'AI Integration Platform',
       description: 'Cutting-edge artificial intelligence solutions for business automation and insights',
-      position: { x: 20, y: 30, z: 45 },
+      orbitRadius: 200,
+      orbitSpeed: 0.5,
+      orbitOffset: 0,
+      size: 16,
       color: 'from-blue-500 to-cyan-500'
     },
     {
@@ -223,7 +279,10 @@ const FloatingUniverse: React.FC<{ onElementClick: (element: any) => void }> = (
       type: 'partner' as const,
       title: 'Oracle Partnership',
       description: 'Strategic partnership with Oracle for enterprise-grade cloud solutions',
-      position: { x: 80, y: 25, z: -30 },
+      orbitRadius: 280,
+      orbitSpeed: 0.3,
+      orbitOffset: Math.PI / 3,
+      size: 20,
       color: 'from-orange-500 to-red-500'
     },
     {
@@ -231,7 +290,10 @@ const FloatingUniverse: React.FC<{ onElementClick: (element: any) => void }> = (
       type: 'capability' as const,
       title: 'Web Development',
       description: 'Modern, responsive web applications built with cutting-edge technologies',
-      position: { x: 35, y: 70, z: 15 },
+      orbitRadius: 350,
+      orbitSpeed: 0.4,
+      orbitOffset: Math.PI / 2,
+      size: 14,
       color: 'from-green-500 to-emerald-500'
     },
     {
@@ -239,7 +301,10 @@ const FloatingUniverse: React.FC<{ onElementClick: (element: any) => void }> = (
       type: 'technology' as const,
       title: 'Docker Infrastructure',
       description: 'Containerized deployment solutions for scalable applications',
-      position: { x: 70, y: 60, z: 60 },
+      orbitRadius: 420,
+      orbitSpeed: 0.6,
+      orbitOffset: Math.PI,
+      size: 16,
       color: 'from-blue-600 to-indigo-600'
     },
     {
@@ -247,7 +312,10 @@ const FloatingUniverse: React.FC<{ onElementClick: (element: any) => void }> = (
       type: 'partner' as const,
       title: 'GitHub Collaboration',
       description: 'Open-source development and collaborative coding solutions',
-      position: { x: 15, y: 80, z: -45 },
+      orbitRadius: 320,
+      orbitSpeed: 0.35,
+      orbitOffset: Math.PI * 1.5,
+      size: 20,
       color: 'from-gray-600 to-gray-800'
     },
     {
@@ -255,7 +323,10 @@ const FloatingUniverse: React.FC<{ onElementClick: (element: any) => void }> = (
       type: 'capability' as const,
       title: 'Creative Consulting',
       description: 'Strategic creative direction and brand development services',
-      position: { x: 85, y: 75, z: 20 },
+      orbitRadius: 380,
+      orbitSpeed: 0.45,
+      orbitOffset: Math.PI * 1.8,
+      size: 14,
       color: 'from-purple-500 to-pink-500'
     },
     {
@@ -263,7 +334,10 @@ const FloatingUniverse: React.FC<{ onElementClick: (element: any) => void }> = (
       type: 'technology' as const,
       title: 'AApanel Hosting',
       description: 'Professional hosting solutions with advanced panel management',
-      position: { x: 50, y: 20, z: 0 },
+      orbitRadius: 250,
+      orbitSpeed: 0.55,
+      orbitOffset: Math.PI * 2.2,
+      size: 16,
       color: 'from-yellow-500 to-orange-500'
     },
     {
@@ -271,7 +345,10 @@ const FloatingUniverse: React.FC<{ onElementClick: (element: any) => void }> = (
       type: 'star' as const,
       title: 'Future Stars',
       description: 'Emerging technologies and innovative solutions on the horizon',
-      position: { x: 90, y: 40, z: 90 },
+      orbitRadius: 450,
+      orbitSpeed: 0.25,
+      orbitOffset: Math.PI * 2.8,
+      size: 12,
       color: 'from-pink-400 to-purple-500'
     }
   ];
@@ -281,31 +358,34 @@ const FloatingUniverse: React.FC<{ onElementClick: (element: any) => void }> = (
   };
 
   return (
-    <div className="relative w-full h-screen overflow-hidden bg-black">
-      {/* Universe Background */}
-      <UniverseBackground />
+    <div ref={containerRef} className="relative w-full h-screen overflow-hidden bg-black">
+      {/* Floating Particles Background */}
+      <FloatingParticles />
       
       {/* VLTRN Logo in Center */}
       <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center z-10">
-        <div className="text-6xl font-bold text-white mb-4">VLTRN</div>
-        <div className="text-xl text-pink-400 font-light">Explore the universe</div>
+        <div className="text-6xl font-bold text-white mb-4 tracking-wider">VLTRN</div>
+        <div className="text-xl text-pink-400 font-light">Scroll to navigate the universe</div>
       </div>
 
-      {/* Floating Elements */}
+      {/* Orbital Elements */}
       {universeElements.map((element) => (
-        <FloatingElement
+        <OrbitalElement
           key={element.id}
           {...element}
           isHovered={hoveredElement === element.id}
           onHover={handleElementHover}
           onElementClick={onElementClick}
+          scrollProgress={scrollProgress}
         />
       ))}
 
       {/* Navigation Instructions */}
       <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 text-center text-white z-10">
-        <p className="text-sm mb-2">Hover over elements to learn more</p>
-        <p className="text-xs text-gray-400">Click to travel to experiences</p>
+        <p className="text-sm mb-2">Scroll to navigate • Hover to learn • Click to explore</p>
+        <div className="w-6 h-10 border border-white/30 rounded-full mx-auto">
+          <div className="w-1 h-3 bg-white/50 rounded-full mx-auto mt-2 animate-bounce"></div>
+        </div>
       </div>
     </div>
   );
@@ -354,244 +434,6 @@ const CustomCursor: React.FC = () => {
   );
 };
 
-// 3D Hero Object Component
-const Hero3DObject: React.FC = () => {
-  const mountRef = useRef<HTMLDivElement>(null);
-  const sceneRef = useRef<THREE.Scene>();
-  const rendererRef = useRef<THREE.WebGLRenderer>();
-  const meshRef = useRef<THREE.Mesh>();
-
-  useEffect(() => {
-    if (!mountRef.current) return;
-
-    // Scene setup
-    const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-    const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
-    
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    mountRef.current.appendChild(renderer.domElement);
-
-    // Create metallic fluid-like object
-    const geometry = new THREE.IcosahedronGeometry(2, 2);
-    const material = new THREE.MeshStandardMaterial({
-      color: 0xffffff,
-      metalness: 0.8,
-      roughness: 0.2,
-      wireframe: false
-    });
-    
-    const mesh = new THREE.Mesh(geometry, material);
-    scene.add(mesh);
-    meshRef.current = mesh;
-
-    // Lighting
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
-    directionalLight.position.set(5, 5, 5);
-    scene.add(directionalLight);
-
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
-    scene.add(ambientLight);
-
-    const pointLight = new THREE.PointLight(0xffffff, 1, 100);
-    pointLight.position.set(-5, 5, 5);
-    scene.add(pointLight);
-
-    camera.position.z = 8;
-
-    // Mouse interaction
-    const mouse = new THREE.Vector2();
-    const handleMouseMove = (event: MouseEvent) => {
-      mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
-      mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
-    };
-
-    window.addEventListener('mousemove', handleMouseMove);
-
-    // Animation loop
-    const animate = () => {
-      requestAnimationFrame(animate);
-
-      if (meshRef.current) {
-        // Rotate the object
-        meshRef.current.rotation.x += 0.005;
-        meshRef.current.rotation.y += 0.005;
-
-        // React to mouse movement
-        meshRef.current.rotation.x += mouse.y * 0.01;
-        meshRef.current.rotation.y += mouse.x * 0.01;
-
-        // Subtle floating animation
-        meshRef.current.position.y = Math.sin(Date.now() * 0.001) * 0.5;
-      }
-
-      renderer.render(scene, camera);
-    };
-
-    animate();
-
-    // Handle resize
-    const handleResize = () => {
-      camera.aspect = window.innerWidth / window.innerHeight;
-      camera.updateProjectionMatrix();
-      renderer.setSize(window.innerWidth, window.innerHeight);
-    };
-
-    window.addEventListener('resize', handleResize);
-
-    // Store references
-    sceneRef.current = scene;
-    rendererRef.current = renderer;
-
-    return () => {
-      window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('resize', handleResize);
-      if (mountRef.current && renderer.domElement) {
-        mountRef.current.removeChild(renderer.domElement);
-      }
-      renderer.dispose();
-    };
-  }, []);
-
-  return <div ref={mountRef} className="absolute inset-0" />;
-};
-
-// Hero Section Component
-const HeroSection: React.FC = () => {
-  return (
-    <section className="section hero w-screen h-screen flex items-center justify-center relative overflow-hidden">
-      {/* 3D Background Object */}
-      <Hero3DObject />
-      
-      {/* Interactive Text */}
-      <h1 className="interactive-text text-8xl font-bold text-white text-center z-10 relative">
-        VLTRN
-      </h1>
-      
-      {/* Scroll Instruction */}
-      <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 text-center text-white z-10">
-        <p className="text-sm mb-2">SCROLL</p>
-        <div className="w-6 h-10 border-2 border-white rounded-full mx-auto">
-          <div className="w-1 h-3 bg-white rounded-full mx-auto mt-2 animate-bounce"></div>
-        </div>
-      </div>
-    </section>
-  );
-};
-
-// Project Section Component
-const ProjectSection: React.FC<{ 
-  title: string; 
-  role: string; 
-  year: string; 
-  backgroundImage?: string;
-  videoUrl?: string;
-}> = ({ title, role, year, backgroundImage, videoUrl }) => {
-  const [isHovered, setIsHovered] = useState(false);
-
-  return (
-    <section className="section project w-screen h-screen flex flex-col items-center justify-center relative overflow-hidden">
-      {/* Background */}
-      <div className="absolute inset-0">
-        {videoUrl ? (
-          <video
-            autoPlay
-            loop
-            muted
-            playsInline
-            className="w-full h-full object-cover"
-          >
-            <source src={videoUrl} type="video/mp4" />
-          </video>
-        ) : (
-          <div 
-            className="w-full h-full bg-cover bg-center"
-            style={{ backgroundImage: backgroundImage ? `url(${backgroundImage})` : 'none' }}
-          />
-        )}
-        <div className="absolute inset-0 bg-black/30"></div>
-      </div>
-
-      {/* Content */}
-      <div className="relative z-10 text-center text-white">
-        <h2 className={`text-6xl font-bold mb-4 transition-all duration-500 ${
-          isHovered ? 'scale-110' : 'scale-100'
-        }`}>
-          {title}
-        </h2>
-        <p className="text-xl mb-8 opacity-80">{role}, {year}</p>
-        
-        <a 
-          href="#"
-          className="view-link inline-block px-8 py-3 border-2 border-white text-white hover:bg-white hover:text-black transition-all duration-300 rounded-full"
-          onMouseEnter={() => setIsHovered(true)}
-          onMouseLeave={() => setIsHovered(false)}
-        >
-          View Live
-        </a>
-      </div>
-    </section>
-  );
-};
-
-// About Section Component
-const AboutSection: React.FC = () => {
-  return (
-    <section className="section about w-screen h-screen flex items-center justify-center relative">
-      <div className="text-center text-white max-w-4xl mx-auto px-8">
-        <h2 className="text-6xl font-bold mb-8">About VLTRN</h2>
-        <p className="text-xl leading-relaxed opacity-90">
-          We are a creative agency specializing in cutting-edge digital experiences, 
-          innovative technology solutions, and transformative brand strategies. 
-          Our team combines technical expertise with creative vision to deliver 
-          projects that inspire, engage, and transform.
-        </p>
-      </div>
-    </section>
-  );
-};
-
-// Contact Section Component
-const ContactSection: React.FC = () => {
-  return (
-    <section className="section contact w-screen h-screen flex items-center justify-center relative">
-      <div className="text-center text-white">
-        <h2 className="text-6xl font-bold mb-8">Get In Touch</h2>
-        <div className="space-y-6">
-          <a 
-            href="mailto:hello@vltrn.agency"
-            className="block text-xl hover:text-gray-300 transition-colors duration-300"
-          >
-            hello@vltrn.agency
-          </a>
-          <a 
-            href="#"
-            className="block text-xl hover:text-gray-300 transition-colors duration-300"
-          >
-            LinkedIn
-          </a>
-          <a 
-            href="#"
-            className="block text-xl hover:text-gray-300 transition-colors duration-300"
-          >
-            Twitter
-          </a>
-          <a 
-            href="#"
-            className="block text-xl hover:text-gray-300 transition-colors duration-300"
-          >
-            GitHub
-          </a>
-        </div>
-        <div className="mt-16 text-sm opacity-60">
-          © 2024 VLTRN. All rights reserved.
-        </div>
-      </div>
-    </section>
-  );
-};
-
 // Main App Component
 function App() {
   const [showPreloader, setShowPreloader] = useState(true);
@@ -611,7 +453,6 @@ function App() {
 
   const handleElementClick = (element: any) => {
     setCurrentExperience(element.id);
-    // Here you can implement the travel animation and experience
     console.log('Traveling to:', element.title);
   };
 
@@ -629,7 +470,7 @@ function App() {
         </div>
       </div>
 
-      <h1 className="text-6xl font-bold mb-4">VLTRN</h1>
+      <h1 className="text-6xl font-bold mb-4 tracking-wider">VLTRN</h1>
       <h2 className="text-2xl text-gray-400 mb-8">CREATIVE AGENCY</h2>
 
       <button
@@ -679,7 +520,7 @@ function App() {
         currentExperience ? (
           <ExperiencePage element={universeElements.find(e => e.id === currentExperience)} />
         ) : (
-          <FloatingUniverse onElementClick={handleElementClick} />
+          <OrbitalUniverse onElementClick={handleElementClick} />
         )
       ) : (
         <div className="w-full h-screen bg-black flex items-center justify-center text-white">
@@ -700,7 +541,10 @@ const universeElements = [
     type: 'technology' as const,
     title: 'AI Integration Platform',
     description: 'Cutting-edge artificial intelligence solutions for business automation and insights',
-    position: { x: 20, y: 30, z: 45 },
+    orbitRadius: 200,
+    orbitSpeed: 0.5,
+    orbitOffset: 0,
+    size: 16,
     color: 'from-blue-500 to-cyan-500'
   },
   {
@@ -708,7 +552,10 @@ const universeElements = [
     type: 'partner' as const,
     title: 'Oracle Partnership',
     description: 'Strategic partnership with Oracle for enterprise-grade cloud solutions',
-    position: { x: 80, y: 25, z: -30 },
+    orbitRadius: 280,
+    orbitSpeed: 0.3,
+    orbitOffset: Math.PI / 3,
+    size: 20,
     color: 'from-orange-500 to-red-500'
   },
   {
@@ -716,15 +563,21 @@ const universeElements = [
     type: 'capability' as const,
     title: 'Web Development',
     description: 'Modern, responsive web applications built with cutting-edge technologies',
-    position: { x: 35, y: 70, z: 15 },
+    orbitRadius: 350,
+    orbitSpeed: 0.4,
+    orbitOffset: Math.PI / 2,
+    size: 14,
     color: 'from-green-500 to-emerald-500'
-    },
+  },
   {
     id: 'docker-infrastructure',
     type: 'technology' as const,
     title: 'Docker Infrastructure',
     description: 'Containerized deployment solutions for scalable applications',
-    position: { x: 70, y: 60, z: 60 },
+    orbitRadius: 420,
+    orbitSpeed: 0.6,
+    orbitOffset: Math.PI,
+    size: 16,
     color: 'from-blue-600 to-indigo-600'
   },
   {
@@ -732,7 +585,10 @@ const universeElements = [
     type: 'partner' as const,
     title: 'GitHub Collaboration',
     description: 'Open-source development and collaborative coding solutions',
-    position: { x: 15, y: 80, z: -45 },
+    orbitRadius: 320,
+    orbitSpeed: 0.35,
+    orbitOffset: Math.PI * 1.5,
+    size: 20,
     color: 'from-gray-600 to-gray-800'
   },
   {
@@ -740,7 +596,10 @@ const universeElements = [
     type: 'capability' as const,
     title: 'Creative Consulting',
     description: 'Strategic creative direction and brand development services',
-    position: { x: 85, y: 75, z: 20 },
+    orbitRadius: 380,
+    orbitSpeed: 0.45,
+    orbitOffset: Math.PI * 1.8,
+    size: 14,
     color: 'from-purple-500 to-pink-500'
   },
   {
@@ -748,7 +607,10 @@ const universeElements = [
     type: 'technology' as const,
     title: 'AApanel Hosting',
     description: 'Professional hosting solutions with advanced panel management',
-    position: { x: 50, y: 20, z: 0 },
+    orbitRadius: 250,
+    orbitSpeed: 0.55,
+    orbitOffset: Math.PI * 2.2,
+    size: 16,
     color: 'from-yellow-500 to-orange-500'
   },
   {
@@ -756,7 +618,10 @@ const universeElements = [
     type: 'star' as const,
     title: 'Future Stars',
     description: 'Emerging technologies and innovative solutions on the horizon',
-    position: { x: 90, y: 40, z: 90 },
+    orbitRadius: 450,
+    orbitSpeed: 0.25,
+    orbitOffset: Math.PI * 2.8,
+    size: 12,
     color: 'from-pink-400 to-purple-500'
   }
 ];
