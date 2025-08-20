@@ -1,19 +1,430 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { BrowserRouter as Router, Routes, Route, useNavigate } from 'react-router-dom';
+import * as THREE from 'three';
 
-// Landing Page Component (EXACT Robin Payot Style)
-const LandingPage: React.FC = () => {
-  const [showContent, setShowContent] = useState(false);
-  const navigate = useNavigate();
+// Preloader Component
+const Preloader: React.FC<{ onComplete: () => void }> = ({ onComplete }) => {
+  const [progress, setProgress] = useState(0);
 
-  const handleEnter = () => {
-    setShowContent(true);
-    navigate('/');
-  };
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setProgress(prev => {
+        if (prev >= 100) {
+          clearInterval(interval);
+          setTimeout(onComplete, 500);
+          return 100;
+        }
+        return prev + Math.random() * 15;
+      });
+    }, 100);
+
+    return () => clearInterval(interval);
+  }, [onComplete]);
 
   return (
     <div className="fixed inset-0 bg-black text-white flex flex-col items-center justify-center z-50">
-      {/* Scroll to explore text */}
+      <div className="text-center">
+        <div className="text-8xl font-bold mb-8">VLTRN</div>
+        <div className="text-2xl text-gray-400 mb-12">Loading Experience</div>
+        
+        {/* Progress Bar */}
+        <div className="w-64 h-2 bg-gray-800 rounded-full mb-4">
+          <div 
+            className="h-full bg-white rounded-full transition-all duration-300 ease-out"
+            style={{ width: `${progress}%` }}
+          />
+        </div>
+        
+        {/* Percentage */}
+        <div className="text-4xl font-bold">{Math.round(progress)}%</div>
+      </div>
+    </div>
+  );
+};
+
+// Custom Cursor Component
+const CustomCursor: React.FC = () => {
+  const cursorRef = useRef<HTMLDivElement>(null);
+  const [isDragging, setIsDragging] = useState(false);
+
+  useEffect(() => {
+    const cursor = cursorRef.current;
+    if (!cursor) return;
+
+    const updateCursor = (e: MouseEvent) => {
+      cursor.style.left = e.clientX + 'px';
+      cursor.style.top = e.clientY + 'px';
+    };
+
+    const handleMouseDown = () => setIsDragging(true);
+    const handleMouseUp = () => setIsDragging(false);
+
+    window.addEventListener('mousemove', updateCursor);
+    window.addEventListener('mousedown', handleMouseDown);
+    window.addEventListener('mouseup', handleMouseUp);
+
+    return () => {
+      window.removeEventListener('mousemove', updateCursor);
+      window.removeEventListener('mousedown', handleMouseDown);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, []);
+
+  return (
+    <div 
+      ref={cursorRef}
+      className={`fixed pointer-events-none z-[9999] transition-all duration-200 ease-out ${
+        isDragging 
+          ? 'w-16 h-16 bg-white text-black rounded-full flex items-center justify-center text-xs font-bold' 
+          : 'w-5 h-5 border border-white rounded-full'
+      }`}
+      style={{ transform: 'translate(-50%, -50%)' }}
+    >
+      {isDragging && 'DRAG'}
+    </div>
+  );
+};
+
+// 3D Hero Object Component
+const Hero3DObject: React.FC = () => {
+  const mountRef = useRef<HTMLDivElement>(null);
+  const sceneRef = useRef<THREE.Scene>();
+  const rendererRef = useRef<THREE.WebGLRenderer>();
+  const meshRef = useRef<THREE.Mesh>();
+
+  useEffect(() => {
+    if (!mountRef.current) return;
+
+    // Scene setup
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+    
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    mountRef.current.appendChild(renderer.domElement);
+
+    // Create metallic fluid-like object
+    const geometry = new THREE.IcosahedronGeometry(2, 2);
+    const material = new THREE.MeshStandardMaterial({
+      color: 0xffffff,
+      metalness: 0.8,
+      roughness: 0.2,
+      wireframe: false
+    });
+    
+    const mesh = new THREE.Mesh(geometry, material);
+    scene.add(mesh);
+    meshRef.current = mesh;
+
+    // Lighting
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+    directionalLight.position.set(5, 5, 5);
+    scene.add(directionalLight);
+
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
+    scene.add(ambientLight);
+
+    const pointLight = new THREE.PointLight(0xffffff, 1, 100);
+    pointLight.position.set(-5, 5, 5);
+    scene.add(pointLight);
+
+    camera.position.z = 8;
+
+    // Mouse interaction
+    const mouse = new THREE.Vector2();
+    const handleMouseMove = (event: MouseEvent) => {
+      mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+      mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+
+    // Animation loop
+    const animate = () => {
+      requestAnimationFrame(animate);
+
+      if (meshRef.current) {
+        // Rotate the object
+        meshRef.current.rotation.x += 0.005;
+        meshRef.current.rotation.y += 0.005;
+
+        // React to mouse movement
+        meshRef.current.rotation.x += mouse.y * 0.01;
+        meshRef.current.rotation.y += mouse.x * 0.01;
+
+        // Subtle floating animation
+        meshRef.current.position.y = Math.sin(Date.now() * 0.001) * 0.5;
+      }
+
+      renderer.render(scene, camera);
+    };
+
+    animate();
+
+    // Handle resize
+    const handleResize = () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    };
+
+    window.addEventListener('resize', handleResize);
+
+    // Store references
+    sceneRef.current = scene;
+    rendererRef.current = renderer;
+
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('resize', handleResize);
+      if (mountRef.current && renderer.domElement) {
+        mountRef.current.removeChild(renderer.domElement);
+      }
+      renderer.dispose();
+    };
+  }, []);
+
+  return <div ref={mountRef} className="absolute inset-0" />;
+};
+
+// Hero Section Component
+const HeroSection: React.FC = () => {
+  return (
+    <section className="section hero w-screen h-screen flex items-center justify-center relative overflow-hidden">
+      {/* 3D Background Object */}
+      <Hero3DObject />
+      
+      {/* Interactive Text */}
+      <h1 className="interactive-text text-8xl font-bold text-white text-center z-10 relative">
+        VLTRN
+      </h1>
+      
+      {/* Scroll Instruction */}
+      <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 text-center text-white z-10">
+        <p className="text-sm mb-2">SCROLL</p>
+        <div className="w-6 h-10 border-2 border-white rounded-full mx-auto">
+          <div className="w-1 h-3 bg-white rounded-full mx-auto mt-2 animate-bounce"></div>
+        </div>
+      </div>
+    </section>
+  );
+};
+
+// Project Section Component
+const ProjectSection: React.FC<{ 
+  title: string; 
+  role: string; 
+  year: string; 
+  backgroundImage?: string;
+  videoUrl?: string;
+}> = ({ title, role, year, backgroundImage, videoUrl }) => {
+  const [isHovered, setIsHovered] = useState(false);
+
+  return (
+    <section className="section project w-screen h-screen flex flex-col items-center justify-center relative overflow-hidden">
+      {/* Background */}
+      <div className="absolute inset-0">
+        {videoUrl ? (
+          <video
+            autoPlay
+            loop
+            muted
+            playsInline
+            className="w-full h-full object-cover"
+          >
+            <source src={videoUrl} type="video/mp4" />
+          </video>
+        ) : (
+          <div 
+            className="w-full h-full bg-cover bg-center"
+            style={{ backgroundImage: backgroundImage ? `url(${backgroundImage})` : 'none' }}
+          />
+        )}
+        <div className="absolute inset-0 bg-black/30"></div>
+      </div>
+
+      {/* Content */}
+      <div className="relative z-10 text-center text-white">
+        <h2 className={`text-6xl font-bold mb-4 transition-all duration-500 ${
+          isHovered ? 'scale-110' : 'scale-100'
+        }`}>
+          {title}
+        </h2>
+        <p className="text-xl mb-8 opacity-80">{role}, {year}</p>
+        
+        <a 
+          href="#"
+          className="view-link inline-block px-8 py-3 border-2 border-white text-white hover:bg-white hover:text-black transition-all duration-300 rounded-full"
+          onMouseEnter={() => setIsHovered(true)}
+          onMouseLeave={() => setIsHovered(false)}
+        >
+          View Live
+        </a>
+      </div>
+    </section>
+  );
+};
+
+// About Section Component
+const AboutSection: React.FC = () => {
+  return (
+    <section className="section about w-screen h-screen flex items-center justify-center relative">
+      <div className="text-center text-white max-w-4xl mx-auto px-8">
+        <h2 className="text-6xl font-bold mb-8">About VLTRN</h2>
+        <p className="text-xl leading-relaxed opacity-90">
+          We are a creative agency specializing in cutting-edge digital experiences, 
+          innovative technology solutions, and transformative brand strategies. 
+          Our team combines technical expertise with creative vision to deliver 
+          projects that inspire, engage, and transform.
+        </p>
+      </div>
+    </section>
+  );
+};
+
+// Contact Section Component
+const ContactSection: React.FC = () => {
+  return (
+    <section className="section contact w-screen h-screen flex items-center justify-center relative">
+      <div className="text-center text-white">
+        <h2 className="text-6xl font-bold mb-8">Get In Touch</h2>
+        <div className="space-y-6">
+          <a 
+            href="mailto:hello@vltrn.agency"
+            className="block text-xl hover:text-gray-300 transition-colors duration-300"
+          >
+            hello@vltrn.agency
+          </a>
+          <a 
+            href="#"
+            className="block text-xl hover:text-gray-300 transition-colors duration-300"
+          >
+            LinkedIn
+          </a>
+          <a 
+            href="#"
+            className="block text-xl hover:text-gray-300 transition-colors duration-300"
+          >
+            Twitter
+          </a>
+          <a 
+            href="#"
+            className="block text-xl hover:text-gray-300 transition-colors duration-300"
+          >
+            GitHub
+          </a>
+        </div>
+        <div className="mt-16 text-sm opacity-60">
+          © 2024 VLTRN. All rights reserved.
+        </div>
+      </div>
+    </section>
+  );
+};
+
+// Main Horizontal Scrolling Container
+const HorizontalScrollContainer: React.FC = () => {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [currentSection, setCurrentSection] = useState(0);
+  const [isScrolling, setIsScrolling] = useState(false);
+
+  const sections = [
+    { id: 'hero', component: <HeroSection /> },
+    { id: 'project1', component: <ProjectSection title="AI Integration Platform" role="Lead Developer" year="2024" /> },
+    { id: 'project2', component: <ProjectSection title="Creative Web Experience" role="Creative Technologist" year="2023" /> },
+    { id: 'about', component: <AboutSection /> },
+    { id: 'contact', component: <ContactSection /> }
+  ];
+
+  const handleWheel = (e: WheelEvent) => {
+    e.preventDefault();
+    if (isScrolling) return;
+
+    setIsScrolling(true);
+    const direction = e.deltaY > 0 ? 1 : -1;
+    const newSection = Math.max(0, Math.min(sections.length - 1, currentSection + direction));
+    
+    setCurrentSection(newSection);
+    scrollToSection(newSection);
+
+    setTimeout(() => setIsScrolling(false), 1000);
+  };
+
+  const scrollToSection = (sectionIndex: number) => {
+    if (containerRef.current) {
+      const sectionWidth = window.innerWidth;
+      const targetX = -sectionIndex * sectionWidth;
+      
+      containerRef.current.style.transform = `translateX(${targetX}px)`;
+    }
+  };
+
+  useEffect(() => {
+    const container = containerRef.current;
+    if (container) {
+      container.addEventListener('wheel', handleWheel, { passive: false });
+      return () => container.removeEventListener('wheel', handleWheel);
+    }
+  }, [currentSection, isScrolling]);
+
+  return (
+    <div className="w-full h-screen overflow-hidden bg-black">
+      {/* Custom Cursor */}
+      <CustomCursor />
+      
+      {/* Navigation Dots */}
+      <div className="fixed right-8 top-1/2 transform -translate-y-1/2 z-40 space-y-4">
+        {sections.map((section, index) => (
+          <button
+            key={section.id}
+            onClick={() => {
+              setCurrentSection(index);
+              scrollToSection(index);
+            }}
+            className={`w-3 h-3 rounded-full transition-all duration-300 ${
+              currentSection === index 
+                ? 'bg-white scale-125' 
+                : 'bg-gray-500 hover:bg-gray-300'
+            }`}
+            title={section.id}
+          />
+        ))}
+      </div>
+
+      {/* Horizontal Scrolling Container */}
+      <div 
+        ref={containerRef}
+        className="flex h-full transition-transform duration-1000 ease-out"
+        style={{ width: `${sections.length * 100}vw` }}
+      >
+        {sections.map((section, index) => (
+          <div key={section.id} className="w-screen h-screen flex-shrink-0">
+            {section.component}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+// Main App Component
+function App() {
+  const [showPreloader, setShowPreloader] = useState(true);
+  const [showLanding, setShowLanding] = useState(false);
+
+  const handlePreloaderComplete = () => {
+    setShowPreloader(false);
+    setShowLanding(true);
+  };
+
+  const handleEnter = () => {
+    setShowLanding(false);
+  };
+
+  // Landing Page Component
+  const LandingPage: React.FC = () => (
+    <div className="fixed inset-0 bg-black text-white flex flex-col items-center justify-center z-50">
       <div className="text-center mb-8">
         <p className="text-lg text-gray-400 mb-4">Scroll to explore</p>
         <div className="w-6 h-10 border-2 border-gray-400 rounded-full mx-auto relative">
@@ -21,11 +432,9 @@ const LandingPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Main title */}
       <h1 className="text-6xl font-bold mb-4">VLTRN</h1>
       <h2 className="text-2xl text-gray-400 mb-8">CREATIVE AGENCY</h2>
 
-      {/* Enter button */}
       <button
         onClick={handleEnter}
         className="px-8 py-3 border-2 border-white text-white hover:bg-white hover:text-black transition-all duration-300 text-lg font-medium"
@@ -33,7 +442,6 @@ const LandingPage: React.FC = () => {
         Enter
       </button>
 
-      {/* Device rotation notice */}
       <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 text-center">
         <div className="flex items-center justify-center mb-2">
           <div className="w-6 h-6 border-2 border-gray-400 rounded rotate-45 mr-2"></div>
@@ -43,381 +451,15 @@ const LandingPage: React.FC = () => {
       </div>
     </div>
   );
-};
-
-// World Component - Each world in the universe
-const World: React.FC<{ 
-  id: string;
-  title: string;
-  subtitle: string;
-  description: string;
-  color: string;
-  accentColor: string;
-  onEnter: () => void;
-  isActive: boolean;
-}> = ({ id, title, subtitle, description, color, accentColor, onEnter, isActive }) => {
-  const [isHovered, setIsHovered] = useState(false);
-
-  return (
-    <div 
-      className={`relative w-screen h-screen flex-shrink-0 flex items-center justify-center transition-all duration-1000 ${
-        isActive ? 'scale-100' : 'scale-95'
-      }`}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-    >
-      {/* Background */}
-      <div className={`absolute inset-0 bg-gradient-to-br ${color} transition-all duration-1000`}>
-        <div className="absolute inset-0 bg-black/20"></div>
-      </div>
-
-      {/* Floating Elements */}
-      <div className="absolute inset-0 overflow-hidden">
-        {[...Array(15)].map((_, i) => (
-          <div
-            key={i}
-            className={`absolute w-2 h-2 ${accentColor} rounded-full animate-float transition-all duration-1000 ${
-              isHovered ? 'opacity-80 scale-150' : 'opacity-40 scale-100'
-            }`}
-            style={{
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
-              animationDelay: `${i * 0.2}s`,
-              animationDuration: `${3 + Math.random() * 4}s`
-            }}
-          />
-        ))}
-      </div>
-
-      {/* Content */}
-      <div className="relative z-10 text-center max-w-4xl mx-auto px-8">
-        <h1 className={`text-8xl font-bold mb-6 tracking-tight text-white transition-all duration-1000 ${
-          isHovered ? 'scale-110' : 'scale-100'
-        }`}>
-          {title}
-        </h1>
-        <h2 className="text-3xl text-gray-200 mb-8 font-light tracking-wide">
-          {subtitle}
-        </h2>
-        <p className="text-xl text-gray-300 mb-16 leading-relaxed">
-          {description}
-        </p>
-
-        {/* Enter World Button */}
-        <button
-          onClick={onEnter}
-          className={`px-8 py-4 border-2 border-white text-white hover:bg-white hover:text-black transition-all duration-500 text-lg font-medium group relative overflow-hidden ${
-            isHovered ? 'scale-110' : 'scale-100'
-          }`}
-        >
-          <span className="relative z-10">Enter World</span>
-          <div className="absolute inset-0 bg-white transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-left"></div>
-        </button>
-      </div>
-
-      {/* World Indicator */}
-      <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 text-center">
-        <p className="text-sm text-gray-300 mb-2">Click to enter</p>
-        <div className="w-6 h-10 border-2 border-gray-300 rounded-full mx-auto">
-          <div className="w-1 h-3 bg-gray-300 rounded-full mx-auto mt-2 animate-bounce"></div>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// Universe Experience Component (Horizontal Scrolling Worlds)
-const UniverseExperience: React.FC = () => {
-  const [currentWorld, setCurrentWorld] = useState(0);
-  const [isDragging, setIsDragging] = useState(false);
-  const [dragStart, setDragStart] = useState(0);
-  const [scrollPosition, setScrollPosition] = useState(0);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const navigate = useNavigate();
-
-  // World data
-  const worlds = [
-    {
-      id: 'hero',
-      title: 'VLTRN',
-      subtitle: 'CREATIVE AGENCY',
-      description: 'We craft digital experiences that inspire, engage, and transform.',
-      color: 'from-purple-900 via-pink-900 to-red-900',
-      accentColor: 'bg-pink-500',
-      route: '/hero'
-    },
-    {
-      id: 'services',
-      title: 'SERVICES',
-      subtitle: 'DIGITAL EXCELLENCE',
-      description: 'Web Development, AI Integration, Creative Consulting, Brand Strategy',
-      color: 'from-blue-900 via-cyan-900 to-teal-900',
-      accentColor: 'bg-cyan-500',
-      route: '/services'
-    },
-    {
-      id: 'ai',
-      title: 'AI INTEGRATION',
-      subtitle: 'FUTURE-FORWARD',
-      description: 'Cutting-edge artificial intelligence solutions for your business',
-      color: 'from-green-900 via-emerald-900 to-teal-900',
-      accentColor: 'bg-emerald-500',
-      route: '/ai'
-    },
-    {
-      id: 'projects',
-      title: 'PROJECTS',
-      subtitle: 'CREATIVE PORTFOLIO',
-      description: 'Showcasing our most innovative and impactful work',
-      color: 'from-orange-900 via-red-900 to-pink-900',
-      accentColor: 'bg-orange-500',
-      route: '/projects'
-    },
-    {
-      id: 'contact',
-      title: 'LET\'S TALK',
-      subtitle: 'START YOUR PROJECT',
-      description: 'Ready to bring your vision to life? Let\'s create something amazing together.',
-      color: 'from-indigo-900 via-purple-900 to-pink-900',
-      accentColor: 'bg-purple-500',
-      route: '/contact'
-    }
-  ];
-
-  const handleWheel = (e: WheelEvent) => {
-    e.preventDefault();
-    const delta = e.deltaY > 0 ? 1 : -1;
-    const newWorld = Math.max(0, Math.min(worlds.length - 1, currentWorld + delta));
-    setCurrentWorld(newWorld);
-    scrollToWorld(newWorld);
-  };
-
-  const handleMouseDown = (e: React.MouseEvent) => {
-    setIsDragging(true);
-    setDragStart(e.clientX);
-  };
-
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (!isDragging) return;
-    const delta = dragStart - e.clientX;
-    if (Math.abs(delta) > 100) {
-      const direction = delta > 0 ? 1 : -1;
-      const newWorld = Math.max(0, Math.min(worlds.length - 1, currentWorld + direction));
-      setCurrentWorld(newWorld);
-      scrollToWorld(newWorld);
-      setIsDragging(false);
-    }
-  };
-
-  const handleMouseUp = () => {
-    setIsDragging(false);
-  };
-
-  const scrollToWorld = (worldIndex: number) => {
-    if (containerRef.current) {
-      const worldWidth = containerRef.current.clientWidth;
-      containerRef.current.scrollTo({
-        left: worldIndex * worldWidth,
-        behavior: 'smooth'
-      });
-    }
-  };
-
-  const enterWorld = (world: typeof worlds[0]) => {
-    navigate(world.route);
-  };
-
-  useEffect(() => {
-    const container = containerRef.current;
-    if (container) {
-      container.addEventListener('wheel', handleWheel, { passive: false });
-      return () => container.removeEventListener('wheel', handleWheel);
-    }
-  }, [currentWorld]);
-
-  return (
-    <div 
-      className="relative w-full h-screen overflow-hidden bg-black"
-      onMouseDown={handleMouseDown}
-      onMouseMove={handleMouseMove}
-      onMouseUp={handleMouseUp}
-      onMouseLeave={handleMouseUp}
-    >
-      {/* Custom Cursor */}
-      <div className="fixed pointer-events-none z-50">
-        <div className="w-4 h-4 bg-white/30 rounded-full transition-all duration-100 ease-out"></div>
-      </div>
-
-      {/* Navigation Dots */}
-      <div className="fixed right-8 top-1/2 transform -translate-y-1/2 z-40 space-y-4">
-        {worlds.map((world, index) => (
-          <button
-            key={world.id}
-            onClick={() => {
-              setCurrentWorld(index);
-              scrollToWorld(index);
-            }}
-            className={`w-3 h-3 rounded-full transition-all duration-300 nav-dot ${
-              currentWorld === index 
-                ? 'bg-white scale-125 shadow-lg shadow-white/50' 
-                : 'bg-gray-500 hover:bg-gray-300'
-            }`}
-            title={world.title}
-          />
-        ))}
-      </div>
-
-      {/* Scroll Instruction */}
-      <div className="fixed bottom-8 left-1/2 transform -translate-x-1/2 text-center z-40">
-        <p className="text-sm text-gray-300 mb-2">Scroll or drag to explore worlds</p>
-        <div className="w-6 h-10 border-2 border-gray-300 rounded-full mx-auto">
-          <div className="w-1 h-3 bg-gray-300 rounded-full mx-auto mt-2 animate-bounce"></div>
-        </div>
-      </div>
-
-      {/* Horizontal Scrolling Container */}
-      <div 
-        ref={containerRef}
-        className="flex h-full transition-transform duration-1000 ease-out"
-        style={{ transform: `translateX(-${currentWorld * 100}%)` }}
-      >
-        {worlds.map((world, index) => (
-          <World
-            key={world.id}
-            {...world}
-            isActive={currentWorld === index}
-            onEnter={() => enterWorld(world)}
-          />
-        ))}
-      </div>
-    </div>
-  );
-};
-
-// Individual World Pages
-const HeroPage: React.FC = () => (
-  <div className="min-h-screen bg-gradient-to-br from-purple-900 via-pink-900 to-red-900 text-white flex items-center justify-center">
-    <div className="text-center">
-      <h1 className="text-8xl font-bold mb-6">VLTRN</h1>
-      <h2 className="text-3xl mb-8">CREATIVE AGENCY</h2>
-      <p className="text-xl mb-12 max-w-2xl mx-auto">
-        We craft digital experiences that inspire, engage, and transform.
-      </p>
-      <button 
-        onClick={() => window.history.back()}
-        className="px-8 py-3 border-2 border-white text-white hover:bg-white hover:text-black transition-all duration-300"
-      >
-        Back to Universe
-      </button>
-    </div>
-  </div>
-);
-
-const ServicesPage: React.FC = () => (
-  <div className="min-h-screen bg-gradient-to-br from-blue-900 via-cyan-900 to-teal-900 text-white flex items-center justify-center">
-    <div className="text-center">
-      <h1 className="text-8xl font-bold mb-6">SERVICES</h1>
-      <h2 className="text-3xl mb-8">DIGITAL EXCELLENCE</h2>
-      <p className="text-xl mb-12 max-w-2xl mx-auto">
-        Web Development, AI Integration, Creative Consulting, Brand Strategy
-      </p>
-      <button 
-        onClick={() => window.history.back()}
-        className="px-8 py-3 border-2 border-white text-white hover:bg-white hover:text-black transition-all duration-300"
-      >
-        Back to Universe
-      </button>
-    </div>
-  </div>
-);
-
-const AIPage: React.FC = () => (
-  <div className="min-h-screen bg-gradient-to-br from-green-900 via-emerald-900 to-teal-900 text-white flex items-center justify-center">
-    <div className="text-center">
-      <h1 className="text-8xl font-bold mb-6">AI INTEGRATION</h1>
-      <h2 className="text-3xl mb-8">FUTURE-FORWARD</h2>
-      <p className="text-xl mb-12 max-w-2xl mx-auto">
-        Cutting-edge artificial intelligence solutions for your business
-      </p>
-      <button 
-        onClick={() => window.history.back()}
-        className="px-8 py-3 border-2 border-white text-white hover:bg-white hover:text-black transition-all duration-300"
-      >
-        Back to Universe
-      </button>
-    </div>
-  </div>
-);
-
-const ProjectsPage: React.FC = () => (
-  <div className="min-h-screen bg-gradient-to-br from-orange-900 via-red-900 to-pink-900 text-white flex items-center justify-center">
-    <div className="text-center">
-      <h1 className="text-8xl font-bold mb-6">PROJECTS</h1>
-      <h2 className="text-3xl mb-8">CREATIVE PORTFOLIO</h2>
-      <p className="text-xl mb-12 max-w-2xl mx-auto">
-        Showcasing our most innovative and impactful work
-      </p>
-      <button 
-        onClick={() => window.history.back()}
-        className="px-8 py-3 border-2 border-white text-white hover:bg-white hover:text-black transition-all duration-300"
-      >
-        Back to Universe
-      </button>
-    </div>
-  </div>
-);
-
-const ContactPage: React.FC = () => (
-  <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 text-white flex items-center justify-center">
-    <div className="text-center">
-      <h1 className="text-8xl font-bold mb-6">LET'S TALK</h1>
-      <h2 className="text-3xl mb-8">START YOUR PROJECT</h2>
-      <p className="text-xl mb-12 max-w-2xl mx-auto">
-        Ready to bring your vision to life? Let's create something amazing together.
-      </p>
-      <button 
-        onClick={() => window.history.back()}
-        className="px-8 py-3 border-2 border-white text-white hover:bg-white hover:text-black transition-all duration-300"
-      >
-        Back to Universe
-      </button>
-    </div>
-  </div>
-);
-
-// Main App Component
-const MainApp: React.FC = () => {
-  return (
-    <Router>
-      <Routes>
-        <Route path="/" element={<UniverseExperience />} />
-        <Route path="/hero" element={<HeroPage />} />
-        <Route path="/services" element={<ServicesPage />} />
-        <Route path="/ai" element={<AIPage />} />
-        <Route path="/projects" element={<ProjectsPage />} />
-        <Route path="/contact" element={<ContactPage />} />
-      </Routes>
-    </Router>
-  );
-};
-
-function App() {
-  const [showLanding, setShowLanding] = useState(true);
-
-  // Hide landing page after initial load
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setShowLanding(false);
-    }, 100);
-    return () => clearTimeout(timer);
-  }, []);
 
   return (
     <>
-      {showLanding ? (
+      {showPreloader ? (
+        <Preloader onComplete={handlePreloaderComplete} />
+      ) : showLanding ? (
         <LandingPage />
       ) : (
-        <MainApp />
+        <HorizontalScrollContainer />
       )}
     </>
   );
