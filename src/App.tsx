@@ -113,7 +113,7 @@ const FloatingElement: React.FC<{
         className={`w-full h-full rounded-full flex items-center justify-center text-2xl font-bold transition-all duration-500 ${
           isHovered 
             ? 'bg-gradient-to-br from-pink-500 to-purple-600 shadow-2xl shadow-pink-500/50' 
-            : `bg-gradient-to-br from-${color} to-${color} shadow-lg`
+            : `bg-gradient-to-br from-blue-500 to-cyan-500 shadow-lg`
         }`}
       >
         {getElementIcon()}
@@ -288,7 +288,7 @@ const FloatingUniverse: React.FC<{ onElementClick: (element: any) => void }> = (
       {/* VLTRN Logo in Center */}
       <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center z-10">
         <div className="text-6xl font-bold text-white mb-4">VLTRN</div>
-        <div className="text-xl text-pink-400 font-light">Scroll to explore the universe</div>
+        <div className="text-xl text-pink-400 font-light">Explore the universe</div>
       </div>
 
       {/* Floating Elements */}
@@ -592,91 +592,6 @@ const ContactSection: React.FC = () => {
   );
 };
 
-// Main Horizontal Scrolling Container
-const HorizontalScrollContainer: React.FC = () => {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [currentSection, setCurrentSection] = useState(0);
-  const [isScrolling, setIsScrolling] = useState(false);
-
-  const sections = [
-    { id: 'hero', component: <HeroSection /> },
-    { id: 'project1', component: <ProjectSection title="AI Integration Platform" role="Lead Developer" year="2024" /> },
-    { id: 'project2', component: <ProjectSection title="Creative Web Experience" role="Creative Technologist" year="2023" /> },
-    { id: 'about', component: <AboutSection /> },
-    { id: 'contact', component: <ContactSection /> }
-  ];
-
-  const handleWheel = (e: WheelEvent) => {
-    e.preventDefault();
-    if (isScrolling) return;
-
-    setIsScrolling(true);
-    const direction = e.deltaY > 0 ? 1 : -1;
-    const newSection = Math.max(0, Math.min(sections.length - 1, currentSection + direction));
-    
-    setCurrentSection(newSection);
-    scrollToSection(newSection);
-
-    setTimeout(() => setIsScrolling(false), 1000);
-  };
-
-  const scrollToSection = (sectionIndex: number) => {
-    if (containerRef.current) {
-      const sectionWidth = window.innerWidth;
-      const targetX = -sectionIndex * sectionWidth;
-      
-      containerRef.current.style.transform = `translateX(${targetX}px)`;
-    }
-  };
-
-  useEffect(() => {
-    const container = containerRef.current;
-    if (container) {
-      container.addEventListener('wheel', handleWheel, { passive: false });
-      return () => container.removeEventListener('wheel', handleWheel);
-    }
-  }, [currentSection, isScrolling]);
-
-  return (
-    <div className="w-full h-screen overflow-hidden bg-black">
-      {/* Custom Cursor */}
-      <CustomCursor />
-      
-      {/* Navigation Dots */}
-      <div className="fixed right-8 top-1/2 transform -translate-y-1/2 z-40 space-y-4">
-        {sections.map((section, index) => (
-          <button
-            key={section.id}
-            onClick={() => {
-              setCurrentSection(index);
-              scrollToSection(index);
-            }}
-            className={`w-3 h-3 rounded-full transition-all duration-300 ${
-              currentSection === index 
-                ? 'bg-white scale-125' 
-                : 'bg-gray-500 hover:bg-gray-300'
-            }`}
-            title={section.id}
-          />
-        ))}
-      </div>
-
-      {/* Horizontal Scrolling Container */}
-      <div 
-        ref={containerRef}
-        className="flex h-full transition-transform duration-1000 ease-out"
-        style={{ width: `${sections.length * 100}vw` }}
-      >
-        {sections.map((section, index) => (
-          <div key={section.id} className="w-screen h-screen flex-shrink-0">
-            {section.component}
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-};
-
 // Main App Component
 function App() {
   const [showPreloader, setShowPreloader] = useState(true);
@@ -753,6 +668,9 @@ function App() {
 
   return (
     <>
+      {/* Custom Cursor - Always visible */}
+      <CustomCursor />
+      
       {showPreloader ? (
         <Preloader onComplete={handlePreloaderComplete} />
       ) : showLanding ? (
@@ -764,7 +682,12 @@ function App() {
           <FloatingUniverse onElementClick={handleElementClick} />
         )
       ) : (
-        <HorizontalScrollContainer />
+        <div className="w-full h-screen bg-black flex items-center justify-center text-white">
+          <div className="text-center">
+            <h1 className="text-4xl font-bold mb-4">Welcome to VLTRN</h1>
+            <p className="text-xl">Click Enter to explore the universe</p>
+          </div>
+        </div>
       )}
     </>
   );
@@ -795,7 +718,7 @@ const universeElements = [
     description: 'Modern, responsive web applications built with cutting-edge technologies',
     position: { x: 35, y: 70, z: 15 },
     color: 'from-green-500 to-emerald-500'
-  },
+    },
   {
     id: 'docker-infrastructure',
     type: 'technology' as const,
