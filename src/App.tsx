@@ -1,21 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { BrowserRouter as Router, Routes, Route, useNavigate } from 'react-router-dom';
-import Header from './components/Header';
-import Home from './pages/Home';
-import About from './pages/About';
-import Services from './pages/Services';
-import Contact from './pages/Contact';
-import Dashboard from './pages/Dashboard';
-import Community from './pages/Community';
-import Projects from './pages/Projects';
-import Tasks from './pages/Tasks';
-import Resources from './pages/Resources';
-import ClientIntakePage from './pages/ClientIntakePage';
-import APITestPage from './pages/APITestPage';
-import VerificationCallback from './pages/VerificationCallback';
-import AuthGuard from './components/AuthGuard';
 
-// Landing Page Component (Robin Payot Style)
+// Landing Page Component (EXACT Robin Payot Style)
 const LandingPage: React.FC = () => {
   const [showContent, setShowContent] = useState(false);
   const navigate = useNavigate();
@@ -180,7 +166,7 @@ const MovingBackground: React.FC<{ color: string }> = ({ color }) => {
   );
 };
 
-// Immersive Scrolling Experience Component
+// Immersive Scrolling Experience Component (EXACT Robin Payot Style)
 const ImmersiveExperience: React.FC = () => {
   const [currentSection, setCurrentSection] = useState(0);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
@@ -354,7 +340,7 @@ const ImmersiveExperience: React.FC = () => {
               </p>
 
               {/* Enhanced Action Button */}
-              <button className="px-8 py-4 border-2 border-white text-white hover:bg-white hover:text-black transition-all duration-500 text-lg font-medium group relative overflow-hidden">
+              <button className="px-8 py-3 border-2 border-white text-white hover:bg-white hover:text-black transition-all duration-500 text-lg font-medium group relative overflow-hidden">
                 <span className="relative z-10">{section.action}</span>
                 <div className="absolute inset-0 bg-white transform scale-x-0 group-hover:scale-x-100 transition-transform duration-500 origin-left"></div>
               </button>
@@ -380,7 +366,6 @@ const ImmersiveExperience: React.FC = () => {
 const MainApp: React.FC = () => {
   return (
     <div className="min-h-screen bg-black text-white">
-      <Header />
       <ImmersiveExperience />
     </div>
   );
