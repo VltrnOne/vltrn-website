@@ -91,7 +91,7 @@ body {
   animation: fadeIn 0.3s ease-out forwards;
 }
 
-/* Custom animations for immersive experience */
+/* Enhanced animations for immersive experience */
 @keyframes float {
   0%, 100% {
     transform: translateY(0px) rotate(0deg);
@@ -103,8 +103,148 @@ body {
   }
 }
 
-.animate-float {
-  animation: float 6s ease-in-out infinite;
+@keyframes float-slow {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg) scale(1);
+    opacity: 0.3;
+  }
+  50% {
+    transform: translateY(-15px) rotate(90deg) scale(1.1);
+    opacity: 0.7;
+  }
+}
+
+@keyframes float-medium {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg) scale(1);
+    opacity: 0.4;
+  }
+  50% {
+    transform: translateY(-25px) rotate(180deg) scale(0.9);
+    opacity: 0.8;
+  }
+}
+
+@keyframes float-fast {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg) scale(1);
+    opacity: 0.2;
+  }
+  50% {
+    transform: translateY(-35px) rotate(270deg) scale(1.2);
+    opacity: 0.6;
+  }
+}
+
+@keyframes rotate-slow {
+  0% {
+    transform: rotate(0deg) scale(1);
+  }
+  100% {
+    transform: rotate(360deg) scale(1);
+  }
+}
+
+@keyframes rotate-medium {
+  0% {
+    transform: rotate(0deg) scale(1);
+  }
+  100% {
+    transform: rotate(-360deg) scale(1);
+  }
+}
+
+@keyframes explode {
+  0% {
+    transform: scale(0) rotate(0deg);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.5) rotate(180deg);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(2) rotate(360deg);
+    opacity: 0;
+  }
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 5px currentColor, 0 0 10px currentColor, 0 0 15px currentColor;
+    opacity: 0.5;
+  }
+  50% {
+    box-shadow: 0 0 10px currentColor, 0 0 20px currentColor, 0 0 30px currentColor;
+    opacity: 1;
+  }
+}
+
+@keyframes wave {
+  0%, 100% {
+    transform: translateX(0) translateY(0);
+  }
+  25% {
+    transform: translateX(10px) translateY(-5px);
+  }
+  50% {
+    transform: translateX(0) translateY(-10px);
+  }
+  75% {
+    transform: translateX(-10px) translateY(-5px);
+  }
+}
+
+@keyframes morph {
+  0%, 100% {
+    border-radius: 50% 50% 50% 50% / 60% 40% 60% 40%;
+  }
+  25% {
+    border-radius: 40% 60% 40% 60% / 50% 50% 50% 50%;
+  }
+  50% {
+    border-radius: 60% 40% 60% 40% / 40% 60% 40% 60%;
+  }
+  75% {
+    border-radius: 50% 50% 50% 50% / 60% 40% 60% 40%;
+  }
+}
+
+/* Animation classes */
+.animate-float-slow {
+  animation: float-slow 8s ease-in-out infinite;
+}
+
+.animate-float-medium {
+  animation: float-medium 6s ease-in-out infinite;
+}
+
+.animate-float-fast {
+  animation: float-fast 4s ease-in-out infinite;
+}
+
+.animate-rotate-slow {
+  animation: rotate-slow 12s linear infinite;
+}
+
+.animate-rotate-medium {
+  animation: rotate-medium 8s linear infinite;
+}
+
+.animate-explode {
+  animation: explode 2s ease-out forwards;
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 3s ease-in-out infinite;
+}
+
+.animate-wave {
+  animation: wave 4s ease-in-out infinite;
+}
+
+.animate-morph {
+  animation: morph 6s ease-in-out infinite;
 }
 
 /* Hide scrollbar for webkit browsers */
@@ -181,5 +321,86 @@ body {
   }
   100% {
     background-position: 0% 50%;
+  }
+}
+
+/* Interactive cursor effects */
+.cursor-trail {
+  pointer-events: none;
+  mix-blend-mode: difference;
+}
+
+/* Enhanced floating element interactions */
+.floating-element:hover {
+  animation-play-state: paused;
+  transform: scale(1.5);
+  filter: brightness(1.5);
+  transition: all 0.3s ease;
+}
+
+/* Moving background patterns */
+.moving-grid {
+  background-size: 50px 50px;
+  animation: gridMove 20s linear infinite;
+}
+
+@keyframes gridMove {
+  0% {
+    transform: translate(0, 0);
+  }
+  100% {
+    transform: translate(50px, 25px);
+  }
+}
+
+/* Explosion particle effects */
+.explosion-particle {
+  position: absolute;
+  pointer-events: none;
+  mix-blend-mode: screen;
+}
+
+/* Enhanced section backgrounds */
+.section-bg {
+  background: radial-gradient(ellipse at center, rgba(255,255,255,0.1) 0%, transparent 70%);
+  animation: backgroundPulse 8s ease-in-out infinite;
+}
+
+@keyframes backgroundPulse {
+  0%, 100% {
+    opacity: 0.1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.3;
+    transform: scale(1.05);
+  }
+}
+
+/* Interactive text effects */
+.interactive-text:hover {
+  text-shadow: 0 0 20px currentColor;
+  transform: scale(1.05);
+  transition: all 0.3s ease;
+}
+
+/* Floating navigation enhancement */
+.floating-nav {
+  backdrop-filter: blur(10px);
+  background: rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Enhanced scroll indicators */
+.scroll-indicator {
+  animation: scrollBounce 2s ease-in-out infinite;
+}
+
+@keyframes scrollBounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
   }
 }
