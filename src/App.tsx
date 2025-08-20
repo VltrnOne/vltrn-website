@@ -42,6 +42,275 @@ const Preloader: React.FC<{ onComplete: () => void }> = ({ onComplete }) => {
   );
 };
 
+// Floating Universe Element Component
+const FloatingElement: React.FC<{
+  id: string;
+  type: 'technology' | 'partner' | 'capability' | 'star';
+  title: string;
+  description: string;
+  position: { x: number; y: number; z: number };
+  color: string;
+  onElementClick: (element: any) => void;
+  isHovered: boolean;
+  onHover: (id: string, isHovered: boolean) => void;
+}> = ({ id, type, title, description, position, color, onElementClick, isHovered, onHover }) => {
+  const [isAnimating, setIsAnimating] = useState(false);
+
+  const getElementIcon = () => {
+    switch (type) {
+      case 'technology':
+        return '⚡';
+      case 'partner':
+        return '🤝';
+      case 'capability':
+        return '🚀';
+      case 'star':
+        return '⭐';
+      default:
+        return '✨';
+    }
+  };
+
+  const getElementSize = () => {
+    switch (type) {
+      case 'technology':
+        return 'w-16 h-16';
+      case 'partner':
+        return 'w-20 h-20';
+      case 'capability':
+        return 'w-14 h-14';
+      case 'star':
+        return 'w-12 h-12';
+      default:
+        return 'w-16 h-16';
+    }
+  };
+
+  const handleClick = () => {
+    setIsAnimating(true);
+    setTimeout(() => {
+      onElementClick({ id, type, title, description });
+      setIsAnimating(false);
+    }, 500);
+  };
+
+  return (
+    <div
+      className={`absolute ${getElementSize()} cursor-pointer transition-all duration-700 ease-out ${
+        isHovered ? 'scale-125 z-50' : 'scale-100'
+      } ${isAnimating ? 'animate-pulse' : ''}`}
+      style={{
+        left: `${position.x}%`,
+        top: `${position.y}%`,
+        transform: `translate(-50%, -50%) rotate(${position.z}deg)`,
+      }}
+      onMouseEnter={() => onHover(id, true)}
+      onMouseLeave={() => onHover(id, false)}
+      onClick={handleClick}
+    >
+      {/* Element Background */}
+      <div 
+        className={`w-full h-full rounded-full flex items-center justify-center text-2xl font-bold transition-all duration-500 ${
+          isHovered 
+            ? 'bg-gradient-to-br from-pink-500 to-purple-600 shadow-2xl shadow-pink-500/50' 
+            : `bg-gradient-to-br from-${color} to-${color} shadow-lg`
+        }`}
+      >
+        {getElementIcon()}
+      </div>
+
+      {/* Info Tag */}
+      {isHovered && (
+        <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-4 bg-black/90 backdrop-blur-md border border-pink-500/50 rounded-lg p-4 text-white text-center min-w-48 z-50">
+          <h3 className="font-bold text-pink-400 mb-2">{title}</h3>
+          <p className="text-sm text-gray-300">{description}</p>
+          <div className="mt-2 text-xs text-pink-300">Click to explore</div>
+        </div>
+      )}
+
+      {/* Connection Lines */}
+      {isHovered && (
+        <div className="absolute inset-0 rounded-full border-2 border-pink-500/50 animate-ping"></div>
+      )}
+    </div>
+  );
+};
+
+// Floating Universe Background
+const UniverseBackground: React.FC = () => {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    // Create starfield
+    const stars: Array<{ x: number; y: number; size: number; speed: number }> = [];
+    for (let i = 0; i < 200; i++) {
+      stars.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        size: Math.random() * 2,
+        speed: Math.random() * 0.5
+      });
+    }
+
+    // Animation loop
+    const animate = () => {
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      ctx.fillStyle = '#ffffff';
+      stars.forEach(star => {
+        ctx.beginPath();
+        ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Move stars
+        star.y += star.speed;
+        if (star.y > canvas.height) {
+          star.y = 0;
+          star.x = Math.random() * canvas.width;
+        }
+      });
+
+      requestAnimationFrame(animate);
+    };
+
+    animate();
+
+    // Handle resize
+    const handleResize = () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  return (
+    <canvas
+      ref={canvasRef}
+      className="absolute inset-0 w-full h-full"
+      style={{ zIndex: -1 }}
+    />
+  );
+};
+
+// Floating Universe Component
+const FloatingUniverse: React.FC<{ onElementClick: (element: any) => void }> = ({ onElementClick }) => {
+  const [hoveredElement, setHoveredElement] = useState<string | null>(null);
+
+  // Universe elements data
+  const universeElements = [
+    {
+      id: 'ai-platform',
+      type: 'technology' as const,
+      title: 'AI Integration Platform',
+      description: 'Cutting-edge artificial intelligence solutions for business automation and insights',
+      position: { x: 20, y: 30, z: 45 },
+      color: 'from-blue-500 to-cyan-500'
+    },
+    {
+      id: 'oracle-partnership',
+      type: 'partner' as const,
+      title: 'Oracle Partnership',
+      description: 'Strategic partnership with Oracle for enterprise-grade cloud solutions',
+      position: { x: 80, y: 25, z: -30 },
+      color: 'from-orange-500 to-red-500'
+    },
+    {
+      id: 'web-development',
+      type: 'capability' as const,
+      title: 'Web Development',
+      description: 'Modern, responsive web applications built with cutting-edge technologies',
+      position: { x: 35, y: 70, z: 15 },
+      color: 'from-green-500 to-emerald-500'
+    },
+    {
+      id: 'docker-infrastructure',
+      type: 'technology' as const,
+      title: 'Docker Infrastructure',
+      description: 'Containerized deployment solutions for scalable applications',
+      position: { x: 70, y: 60, z: 60 },
+      color: 'from-blue-600 to-indigo-600'
+    },
+    {
+      id: 'github-collaboration',
+      type: 'partner' as const,
+      title: 'GitHub Collaboration',
+      description: 'Open-source development and collaborative coding solutions',
+      position: { x: 15, y: 80, z: -45 },
+      color: 'from-gray-600 to-gray-800'
+    },
+    {
+      id: 'creative-consulting',
+      type: 'capability' as const,
+      title: 'Creative Consulting',
+      description: 'Strategic creative direction and brand development services',
+      position: { x: 85, y: 75, z: 20 },
+      color: 'from-purple-500 to-pink-500'
+    },
+    {
+      id: 'aapanel-hosting',
+      type: 'technology' as const,
+      title: 'AApanel Hosting',
+      description: 'Professional hosting solutions with advanced panel management',
+      position: { x: 50, y: 20, z: 0 },
+      color: 'from-yellow-500 to-orange-500'
+    },
+    {
+      id: 'future-stars',
+      type: 'star' as const,
+      title: 'Future Stars',
+      description: 'Emerging technologies and innovative solutions on the horizon',
+      position: { x: 90, y: 40, z: 90 },
+      color: 'from-pink-400 to-purple-500'
+    }
+  ];
+
+  const handleElementHover = (id: string, isHovered: boolean) => {
+    setHoveredElement(isHovered ? id : null);
+  };
+
+  return (
+    <div className="relative w-full h-screen overflow-hidden bg-black">
+      {/* Universe Background */}
+      <UniverseBackground />
+      
+      {/* VLTRN Logo in Center */}
+      <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center z-10">
+        <div className="text-6xl font-bold text-white mb-4">VLTRN</div>
+        <div className="text-xl text-pink-400 font-light">Scroll to explore the universe</div>
+      </div>
+
+      {/* Floating Elements */}
+      {universeElements.map((element) => (
+        <FloatingElement
+          key={element.id}
+          {...element}
+          isHovered={hoveredElement === element.id}
+          onHover={handleElementHover}
+          onElementClick={onElementClick}
+        />
+      ))}
+
+      {/* Navigation Instructions */}
+      <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 text-center text-white z-10">
+        <p className="text-sm mb-2">Hover over elements to learn more</p>
+        <p className="text-xs text-gray-400">Click to travel to experiences</p>
+      </div>
+    </div>
+  );
+};
+
 // Custom Cursor Component
 const CustomCursor: React.FC = () => {
   const cursorRef = useRef<HTMLDivElement>(null);
@@ -412,6 +681,8 @@ const HorizontalScrollContainer: React.FC = () => {
 function App() {
   const [showPreloader, setShowPreloader] = useState(true);
   const [showLanding, setShowLanding] = useState(false);
+  const [showUniverse, setShowUniverse] = useState(false);
+  const [currentExperience, setCurrentExperience] = useState<string | null>(null);
 
   const handlePreloaderComplete = () => {
     setShowPreloader(false);
@@ -420,6 +691,17 @@ function App() {
 
   const handleEnter = () => {
     setShowLanding(false);
+    setShowUniverse(true);
+  };
+
+  const handleElementClick = (element: any) => {
+    setCurrentExperience(element.id);
+    // Here you can implement the travel animation and experience
+    console.log('Traveling to:', element.title);
+  };
+
+  const handleBackToUniverse = () => {
+    setCurrentExperience(null);
   };
 
   // Landing Page Component
@@ -452,17 +734,108 @@ function App() {
     </div>
   );
 
+  // Experience Pages
+  const ExperiencePage: React.FC<{ element: any }> = ({ element }) => (
+    <div className="fixed inset-0 bg-gradient-to-br from-pink-900 via-purple-900 to-blue-900 text-white flex items-center justify-center z-50">
+      <div className="text-center max-w-4xl mx-auto px-8">
+        <h1 className="text-6xl font-bold mb-8 text-pink-400">{element.title}</h1>
+        <p className="text-xl mb-12 leading-relaxed">{element.description}</p>
+        
+        <button 
+          onClick={handleBackToUniverse}
+          className="px-8 py-3 border-2 border-pink-400 text-pink-400 hover:bg-pink-400 hover:text-black transition-all duration-300 rounded-full"
+        >
+          Back to Universe
+        </button>
+      </div>
+    </div>
+  );
+
   return (
     <>
       {showPreloader ? (
         <Preloader onComplete={handlePreloaderComplete} />
       ) : showLanding ? (
         <LandingPage />
+      ) : showUniverse ? (
+        currentExperience ? (
+          <ExperiencePage element={universeElements.find(e => e.id === currentExperience)} />
+        ) : (
+          <FloatingUniverse onElementClick={handleElementClick} />
+        )
       ) : (
         <HorizontalScrollContainer />
       )}
     </>
   );
 }
+
+// Universe elements data (moved outside component for access)
+const universeElements = [
+  {
+    id: 'ai-platform',
+    type: 'technology' as const,
+    title: 'AI Integration Platform',
+    description: 'Cutting-edge artificial intelligence solutions for business automation and insights',
+    position: { x: 20, y: 30, z: 45 },
+    color: 'from-blue-500 to-cyan-500'
+  },
+  {
+    id: 'oracle-partnership',
+    type: 'partner' as const,
+    title: 'Oracle Partnership',
+    description: 'Strategic partnership with Oracle for enterprise-grade cloud solutions',
+    position: { x: 80, y: 25, z: -30 },
+    color: 'from-orange-500 to-red-500'
+  },
+  {
+    id: 'web-development',
+    type: 'capability' as const,
+    title: 'Web Development',
+    description: 'Modern, responsive web applications built with cutting-edge technologies',
+    position: { x: 35, y: 70, z: 15 },
+    color: 'from-green-500 to-emerald-500'
+  },
+  {
+    id: 'docker-infrastructure',
+    type: 'technology' as const,
+    title: 'Docker Infrastructure',
+    description: 'Containerized deployment solutions for scalable applications',
+    position: { x: 70, y: 60, z: 60 },
+    color: 'from-blue-600 to-indigo-600'
+  },
+  {
+    id: 'github-collaboration',
+    type: 'partner' as const,
+    title: 'GitHub Collaboration',
+    description: 'Open-source development and collaborative coding solutions',
+    position: { x: 15, y: 80, z: -45 },
+    color: 'from-gray-600 to-gray-800'
+  },
+  {
+    id: 'creative-consulting',
+    type: 'capability' as const,
+    title: 'Creative Consulting',
+    description: 'Strategic creative direction and brand development services',
+    position: { x: 85, y: 75, z: 20 },
+    color: 'from-purple-500 to-pink-500'
+  },
+  {
+    id: 'aapanel-hosting',
+    type: 'technology' as const,
+    title: 'AApanel Hosting',
+    description: 'Professional hosting solutions with advanced panel management',
+    position: { x: 50, y: 20, z: 0 },
+    color: 'from-yellow-500 to-orange-500'
+  },
+  {
+    id: 'future-stars',
+    type: 'star' as const,
+    title: 'Future Stars',
+    description: 'Emerging technologies and innovative solutions on the horizon',
+    position: { x: 90, y: 40, z: 90 },
+    color: 'from-pink-400 to-purple-500'
+  }
+];
 
 export default App;
