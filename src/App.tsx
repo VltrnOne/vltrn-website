@@ -361,12 +361,14 @@ const Orbital3DElement: React.FC<{
         meshRef.current.position.y = Math.sin(Date.now() * meshRef.current.userData.floatSpeed + meshRef.current.userData.floatOffset) * 0.2;
 
         // Hover effects
-        if (isHovered) {
-          meshRef.current.scale.setScalar(1.2);
-          meshRef.current.material.emissiveIntensity = 0.3;
-        } else {
-          meshRef.current.scale.setScalar(1.0);
-          meshRef.current.material.emissiveIntensity = 0.1;
+        if (meshRef.current.material instanceof THREE.MeshStandardMaterial) {
+          if (isHovered) {
+            meshRef.current.scale.setScalar(1.2);
+            meshRef.current.material.emissiveIntensity = 0.3;
+          } else {
+            meshRef.current.scale.setScalar(1.0);
+            meshRef.current.material.emissiveIntensity = 0.1;
+          }
         }
       }
 
@@ -423,7 +425,7 @@ const Orbital3DElement: React.FC<{
       {isHovered && (
         <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-8 text-center z-50">
           <h3 className="text-white font-light text-lg mb-2 tracking-wide">{title}</h3>
-          <p className="text-gray-300 text-sm leading-relaxed max-w-48 opacity-0 animate-fade-in">
+          <p className="text-gray-300 text-sm leading-relaxed max-w-48 opacity-0 animate-in fade-in duration-300">
             {description}
           </p>
         </div>
